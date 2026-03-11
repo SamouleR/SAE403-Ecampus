@@ -1,0 +1,19 @@
+.dashboard-container { padding: 40px; background-color: #f8f9fa; min-height: 90vh; }
+.sae-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; margin-top: 30px; }
+
+.sae-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    border-left: 6px solid #dee2e6;
+    transition: transform 0.2s;
+}
+
+.sae-card:hover { transform: translateY(-5px); }
+.sae-card.validé { border-left-color: #28a745; }
+.sae-card.rendu-attendu { border-left-color: #ffc107; }
+.sae-card.en-retard { border-left-color: #dc3545; }
+
+.card-badge { background: #e9ecef; width: fit-content; padding: 2px 10px; border-radius: 20px; font-size: 0.8rem; margin-bottom: 10px; }
+.btn-details { width: 100%; margin-top: 15px; padding: 10px; border: none; background: #007bff; color: white; border-radius: 6px; cursor: pointer; }
