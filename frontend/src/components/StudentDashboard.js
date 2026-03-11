@@ -1,34 +1,30 @@
 import React from 'react';
-import './StudentDashboard.css'; // On va créer ce CSS juste après
+import './StudentDashboard.css';
 
 const StudentDashboard = () => {
-    // Données fictives (Mocks) en attendant que ton binôme finisse le Back-end
-    const mesSaes = [
-        { id: 1, titre: "SAE 4.01 - Développement Web", semestre: "S4", etat: "Rendu attendu", date: "25 Mars" },
-        { id: 2, titre: "SAE 4.02 - Marketing Digital", semestre: "S4", etat: "Validé", date: "10 Mars" },
-        { id: 3, titre: "SAE 4.03 - Communication", semestre: "S4", etat: "En retard", date: "01 Mars" },
+    const saes = [
+        { id: 1, titre: "SAE 4.01 - Développement Web", semestre: "S4", etat: "rendu", date: "25 Mars" },
+        { id: 2, titre: "SAE 4.02 - Marketing Digital", semestre: "S4", etat: "valide", date: "10 Mars" },
+        { id: 3, titre: "SAE 4.03 - Communication", semestre: "S4", etat: "retard", date: "01 Mars" },
     ];
 
     return (
-        <div className="dashboard-container">
-            <header className="dashboard-header">
-                <h1>Tableau de bord Étudiant</h1>
-                <div className="filter-bar">
-                    <button className="active">Toutes les SAE</button>
-                    <button>Semestre 4</button>
-                </div>
+        <div className="dashboard">
+            <header className="dash-header">
+                <h1>Mon Espace SAE</h1>
+                <p>Bienvenue sur votre suivi de projets.</p>
             </header>
-
             <div className="sae-grid">
-                {mesSaes.map(sae => (
-                    <div key={sae.id} className={`sae-card ${sae.etat.toLowerCase().replace(' ', '-')}`}>
-                        <div className="card-badge">{sae.semestre}</div>
-                        <h3>{sae.titre}</h3>
-                        <p className="due-date">Échéance : <strong>{sae.date}</strong></p>
-                        <div className="status-indicator">
-                            <span className="dot"></span> {sae.etat}
+                {saes.map(s => (
+                    <div key={s.id} className={`sae-card ${s.etat}`}>
+                        <span className="badge">{s.semestre}</span>
+                        <h3>{s.titre}</h3>
+                        <p>Date limite : <strong>{s.date}</strong></p>
+                        <div className="status">
+                            {s.etat === 'rendu' && "✅ Rendu effectué"}
+                            {s.etat === 'valide' && "⭐ Projet validé"}
+                            {s.etat === 'retard' && "⚠️ Retard"}
                         </div>
-                        <button className="btn-details">Accéder à la SAE</button>
                     </div>
                 ))}
             </div>
