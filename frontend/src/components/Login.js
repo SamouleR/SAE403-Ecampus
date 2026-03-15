@@ -1,46 +1,103 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
+import './Login.css';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [roleActif, setRoleActif] = useState('STUDENT'); // 'STUDENT', 'TEACHER' ou 'ADMIN'
+    const [error, setError] = useState('');
     const navigate = useNavigate();
+
+    // Mapping pour faire le lien entre l'onglet et le rôle dans le JSON
+    const roleMapping = {
+        STUDENT: 'ROLE_STUDENT',
+        TEACHER: 'ROLE_TEACHER',
+        ADMIN: 'ROLE_ADMIN'
+    };
+
+    const labels = {
+        STUDENT: 'Étudiant',
+        TEACHER: 'Enseignant',
+        ADMIN: 'Administrateur'
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        try {
-            const user = await authService.login(email, password);
-            if (user) {
-                authService.setSession('fake-token-123', user);
-                if (user.roles.includes('ROLE_ADMIN')) navigate('/admin');
-                else if (user.roles.includes('ROLE_TEACHER')) navigate('/enseignant');
-                else navigate('/etudiant');
-                window.location.reload(); // Pour actualiser la Navbar
+        setError(''); // Reset de l'erreur
+
+        const user = await authService.login(email, password);
+        
+        if (user) {
+            // VERIFICATION STRICTE DU ROLE
+            const roleAttendu = roleMapping[roleActif];
+            
+            if (user.roles.includes(roleAttendu)) {
+                // Tout est OK
+                authService.setSession('token-secure', user);
+                const destination = roleActif === 'ADMIN' ? '/admin' : 
+                                   roleActif === 'TEACHER' ? '/enseignant' : '/etudiant';
+                window.location.href = destination;
             } else {
-                alert("Identifiants incorrects");
+                // Identifiants OK mais MAUVAIS RÔLE
+                setError(`Ce compte n'a pas les droits pour l'espace ${labels[roleActif]}.`);
             }
-        } catch (err) {
-            console.error("Erreur login:", err);
+        } else {
+            // MAUVAIS IDENTIFIANTS
+            setError("Identifiants incorrects.");
         }
     };
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#f0f2f5' }}>
-            <form onSubmit={handleLogin} style={{ background: 'white', padding: '40px', borderRadius: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                <h2 style={{ marginBottom: '20px', color: '#1a73e8' }}>Connexion Ecampus</h2>
-                <div style={{ marginBottom: '15px' }}>
-                    <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required 
-                           style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }} />
+        <div className="login-page">
+            <div className="login-card">
+                <h2>Connexion Ecampus</h2>
+                
+                <div className="role-tabs">
+                    {Object.keys(labels).map((role) => (
+                        <button 
+                            key={role}
+                            type="button"
+                            className={roleActif === role ? 'active' : ''} 
+                            onClick={() => {
+                                setRoleActif(role);
+                                setError(''); // On efface l'erreur quand on change d'onglet
+                            }}
+                        >
+                            {labels[role]}
+                        </button>
+                    ))}
                 </div>
-                <div style={{ marginBottom: '20px' }}>
-                    <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} required 
-                           style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }} />
-                </div>
-                <button type="submit" style={{ width: '100%', padding: '12px', background: '#1a73e8', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
-                    Se connecter
-                </button>
-            </form>
+
+                <form onSubmit={handleLogin}>
+                    {error && <div className="error-box">{error}</div>}
+
+                    <div className="input-group">
+                        <label>Identifiant</label>
+                        <input 
+                            type="email" 
+                            placeholder="votre@email.fr"
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)} 
+                            required 
+                        />
+                    </div>
+                    <div className="input-group">
+                        <label>Mot de passe</label>
+                        <input 
+                            type="password" 
+                            placeholder="••••••••"
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            required 
+                        />
+                    </div>
+                    <button type="submit" className="login-btn">
+                        Accéder à l'espace {labels[roleActif]}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };

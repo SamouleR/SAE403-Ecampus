@@ -1,25 +1,30 @@
+const API_URL = 'http://localhost:8000/api';
+
 export const authService = {
-    // Sauvegarde la session dans le navigateur
-    setSession: (token, user) => {
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-    },
-
-    // Vérifie les identifiants dans le JSON
     login: async (email, password) => {
-        const response = await fetch('/user.json');
-        const users = await response.json();
-        const user = users.find(u => u.email === email && u.password === password);
-        return user; 
+        const response = await fetch(`${API_URL}/login_check`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }) // Symfony attend souvent "username" au lieu d'email selon la config
+        });
+
+        if (!response.ok) return null;
+
+        const data = await response.json();
+        // data contient normalement { "token": "xxxx", "user": { "nom": "...", "roles": [...] } }
+        if (data.token) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            return data.user;
+        }
+        return null;
     },
 
-    // Récupère l'utilisateur connecté
     getCurrentUser: () => {
         const user = localStorage.getItem('user');
         return user ? JSON.parse(user) : null;
     },
 
-    // Déconnexion complète
     logout: () => {
         localStorage.clear();
         window.location.href = '/login';

@@ -1,0 +1,102 @@
+/* src/components/AdminDashboard.css */
+.admin-container { 
+    padding: 40px; 
+    max-width: 1100px; 
+    margin: 0 auto; 
+    font-family: 'Inter', sans-serif;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 20px;
+}
+
+.add-btn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.add-btn:hover { background: #059669; transform: translateY(-1px); }
+
+/* Formulaire d'ajout */
+.add-user-form {
+    background: #f8fafc;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 40px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.form-grid input, .form-grid select {
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+
+.save-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+/* Liste des utilisateurs */
+.user-list {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 16px; border-bottom: 1px solid #f1f5f9; }
+th { background: #f1f5f9; color: #475569; font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
+
+.role-tag {
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+.role-tag.prof { background: #dbeafe; color: #1e40af; }
+.role-tag.student { background: #dcfce7; color: #166534; }
+
+.delete-btn { 
+    background: #fee2e2; 
+    color: #ef4444;
+    border: none; 
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer; 
+    transition: 0.2s;
+}
+.delete-btn:hover { background: #fecaca; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

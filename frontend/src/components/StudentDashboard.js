@@ -1,35 +1,25 @@
 import React from 'react';
-import './StudentDashboard.css';
 
 const StudentDashboard = () => {
-    const saes = [
-        { id: 1, titre: "SAE 4.01 - Développement Web", semestre: "S4", etat: "rendu", date: "25 Mars" },
-        { id: 2, titre: "SAE 4.02 - Marketing Digital", semestre: "S4", etat: "valide", date: "10 Mars" },
-        { id: 3, titre: "SAE 4.03 - Communication", semestre: "S4", etat: "retard", date: "01 Mars" },
-    ];
-
     return (
-        <div className="dashboard">
-            <header className="dash-header">
-                <h1>Mon Espace SAE</h1>
-                <p>Bienvenue sur votre suivi de projets.</p>
-            </header>
-            <div className="sae-grid">
-                {saes.map(s => (
-                    <div key={s.id} className={`sae-card ${s.etat}`}>
-                        <span className="badge">{s.semestre}</span>
-                        <h3>{s.titre}</h3>
-                        <p>Date limite : <strong>{s.date}</strong></p>
-                        <div className="status">
-                            {s.etat === 'rendu' && "✅ Rendu effectué"}
-                            {s.etat === 'valide' && "⭐ Projet validé"}
-                            {s.etat === 'retard' && "⚠️ Retard"}
-                        </div>
-                    </div>
-                ))}
+        <div className="p-4">
+            <h1>Mon Tableau de Bord Étudiant</h1> [cite: 15]
+            <div className="dashboard-grid">
+                <div className="card status-en-cours">
+                    <h3>🚀 SAE en cours</h3>
+                    <p>SAE 4.03 - Backend JS</p>
+                    <button>Rendre mon travail</button> 
+                </div>
+                <div className="card status-rendu">
+                    <h3>✅ SAE Rendues</h3>
+                    <p>SAE 4.02 - Design UI</p>
+                </div>
+            </div>
+            <div className="announcements">
+                <h3>📢 Dernières Annonces</h3> 
+                <p>M. Lecadet : La soutenance approche !</p>
             </div>
         </div>
     );
 };
-
 export default StudentDashboard;

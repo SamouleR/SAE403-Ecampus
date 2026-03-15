@@ -1,0 +1,4 @@
+[
+  { "id": 1, "titre": "SAE 4.01 - Développement Web", "description": "Application React/Symfony", "enseignant": "M. Lecadet" },
+  { "id": 2, "titre": "SAE 4.02 - Marketing Digital", "description": "Analyse de marché", "enseignant": "Mme Benamor" }
+]
