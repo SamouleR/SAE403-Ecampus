@@ -1,111 +1,104 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
+
+// Détecte automatiquement l'URL de ton backend sur Codespaces
+const API_URL = window.location.origin.replace('-3000', '-8000');
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [data, setData] = useState({ saes: [], ressources: [], annonces: [] });
-  const [loginForm, setLoginForm] = useState({ email: '', pass: '' });
+  const [roleIndex, setRoleIndex] = useState(0);
+  const [credentials, setCredentials] = useState({ email: '', pass: '' });
 
-  const loadData = () => {
-    fetch('http://localhost:8000/api/content')
-      .then(res => res.json())
-      .then(json => setData(json));
-  };
-
-  useEffect(() => { if (user) loadData(); }, [user]);
+  const roles = [
+    { label: "Etudiante", id: "ROLE_STUDENT" },
+    { label: "Admin", id: "ROLE_ADMIN" },
+    { label: "Enseignante", id: "ROLE_TEACHER" }
+  ];
 
   const handleLogin = (e) => {
     e.preventDefault();
-    fetch('http://localhost:8000/api/login', {
+    fetch(`${API_URL}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: loginForm.email, password: loginForm.pass })
+      body: JSON.stringify({ 
+        email: credentials.email, 
+        password: credentials.pass, 
+        role: roles[roleIndex].id 
+      })
     })
     .then(res => res.ok ? res.json() : Promise.reject())
-    .then(userData => setUser(userData))
-    .catch(() => alert("Erreur de connexion : vérifiez vos identifiants."));
+    .then(data => setUser(data))
+    .catch(() => alert("Accès refusé. Rappel : admin@ecampus.fr / admin"));
   };
 
-  // --- ÉCRAN DE SÉLECTION & LOGIN ---
+  // --- CONFIG ANIMATION INDIVIDUELLE ---
+  const containerVariants = {
+    animate: { transition: { staggerChildren: 0.1 } } // Délai entre chaque enfant
+  };
+
+  const itemVariants = {
+    initial: { opacity: 0, x: -20 },
+    animate: { opacity: 1, x: 0, transition: { duration: 0.3 } },
+    exit: { opacity: 0, x: 20, transition: { duration: 0.2 } }
+  };
+
   if (!user) return (
-    <div className="auth-wrapper">
-      <form className="login-card" onSubmit={handleLogin}>
-        <h1>Connexion Ecampus</h1>
-        <p>Choisissez votre profil pour tester :</p>
-        <div className="role-hints">
-            <span onClick={() => setLoginForm({email:'sam@mmi.fr', pass:'sam123'})}>🎓 Étudiant</span>
-            <span onClick={() => setLoginForm({email:'prof@mmi.fr', pass:'prof123'})}>👨‍🏫 Prof</span>
-            <span onClick={() => setLoginForm({email:'admin@mmi.fr', pass:'admin123'})}>🛠️ Admin</span>
+    <div className="login-container">
+      <div className="logo-placeholder">MMI</div>
+      
+      <div className="login-card">
+        <div className="role-title-wrapper">
+          <AnimatePresence mode="wait">
+            <motion.h2 
+              key={roleIndex}
+              initial={{ opacity: 0, y: -10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: 10 }}
+              className="role-title"
+            >
+              {roles[roleIndex].label}
+            </motion.h2>
+          </AnimatePresence>
         </div>
-        <input type="email" placeholder="Email" value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})} required />
-        <input type="password" placeholder="Mot de passe" value={loginForm.pass} onChange={e => setLoginForm({...loginForm, pass: e.target.value})} required />
-        <button type="submit">Entrer sur la plateforme</button>
-      </form>
+        
+        <AnimatePresence mode="wait">
+          <motion.form 
+            key={roleIndex}
+            variants={containerVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            onSubmit={handleLogin}
+          >
+            {/* CHAQUE motion.div CI-DESSOUS S'ANIME L'UN APRÈS L'AUTRE */}
+            <motion.div className="field" variants={itemVariants}>
+              <label>identifiant</label>
+              <input type="text" value={credentials.email} onChange={e => setCredentials({...credentials, email: e.target.value})} placeholder="admin@ecampus.fr" />
+            </motion.div>
+
+            <motion.div className="field" variants={itemVariants}>
+              <label>mot de passe</label>
+              <input type="password" value={credentials.pass} onChange={e => setCredentials({...credentials, pass: e.target.value})} />
+            </motion.div>
+
+            <motion.div className="controls" variants={itemVariants}>
+              <button type="button" className="nav-btn" onClick={() => setRoleIndex((roleIndex - 1 + 3) % 3)}>[ précédent ]</button>
+              <button type="submit" className="connexion-btn">Connexion</button>
+              <button type="button" className="nav-btn" onClick={() => setRoleIndex((roleIndex + 1) % 3)}>[ suivant ]</button>
+            </motion.div>
+          </motion.form>
+        </AnimatePresence>
+      </div>
     </div>
   );
 
   return (
-    <div className="platform-container">
-      <nav className="sidebar">
-        <h2>MMI DASHBOARD</h2>
-        <div className="user-info">
-            <strong>{user.nom}</strong>
-            <small>{user.role}</small>
-        </div>
-        <button onClick={() => setUser(null)} className="btn-logout">Quitter</button>
-      </nav>
-
-      <main className="main-view">
-        {/* VUE ÉTUDIANT : Priorités et échéances [cite: 15] */}
-        {user.role === 'ROLE_STUDENT' && (
-          <section>
-            <h2>Mes SAE en cours</h2>
-            <div className="sae-grid">
-              {data.saes.map(s => (
-                <div key={s.id} className="sae-card ongoing">
-                  <h3>{s.titre}</h3>
-                  <p>{s.desc}</p>
-                  <div className="footer">📅 Échéance : {s.echeance}</div>
-                </div>
-              ))}
-            </div>
-            <h3>📢 Dernières Annonces</h3>
-            {data.annonces.map(a => <div className="ann-box"><strong>{a.date}</strong> : {a.msg}</div>)}
-          </section>
-        )}
-
-        {/* VUE ENSEIGNANT : Gestion globale et formulaires [cite: 16, 19] */}
-        {user.role === 'ROLE_TEACHER' && (
-          <section>
-            <h2>Espace Enseignant</h2>
-            <div className="form-publish">
-              <h3>Publier une Annonce / Rappel</h3>
-              <textarea id="msg-input" placeholder="Écrivez votre message ici..."></textarea>
-              <button onClick={() => {
-                const msg = document.getElementById('msg-input').value;
-                fetch('http://localhost:8000/api/publish', {
-                  method:'POST', headers:{'Content-Type':'application/json'},
-                  body: JSON.stringify({ type:'ANNONCE', payload: { msg } })
-                }).then(() => { loadData(); document.getElementById('msg-input').value = ''; });
-              }}>Diffuser l'annonce</button>
-            </div>
-            <h3>Avancement agrégé des groupes</h3>
-            <div className="stats-box">SAE 4.03 : 18/28 livrets déposés (64%)</div>
-          </section>
-        )}
-
-        {/* VUE ADMIN : Gestion structurelle */}
-        {user.role === 'ROLE_ADMIN' && (
-          <section>
-            <h2>Console Administration</h2>
-            <p>Gestion des utilisateurs et maintenance du serveur pédagogique.</p>
-            <div className="admin-list">
-                <div>👤 Samuel R. (Étudiant)</div>
-                <div>👤 M. Lecadet (Enseignant)</div>
-            </div>
-          </section>
-        )}
-      </main>
+    <div className="app-content">
+      <motion.h1 initial={{ scale: 0.8 }} animate={{ scale: 1 }}>
+        Bienvenue {user.nom}
+      </motion.h1>
+      <button onClick={() => setUser(null)} className="connexion-btn" style={{marginTop:'20px'}}>Déconnexion</button>
     </div>
   );
 }

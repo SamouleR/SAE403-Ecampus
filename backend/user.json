@@ -1,0 +1,6 @@
+[
+  { "id": 1, "email": "admin@ecampus.fr", "password": "admin", "roles": ["ROLE_ADMIN"], "nom": "Administrateur" },
+  { "id": 2, "email": "lecadet@ecampus.fr", "password": "prof", "roles": ["ROLE_TEACHER"], "nom": "M. Lecadet" },
+  { "id": 3, "email": "benamor@ecampus.fr", "password": "prof", "roles": ["ROLE_TEACHER"], "nom": "Mme Benamor" },
+  { "id": 5, "email": "samuel@ecampus.fr", "password": "sam", "roles": ["ROLE_STUDENT"], "nom": "Samuel Ralaikoa" }
+]
