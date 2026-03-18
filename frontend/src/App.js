@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AdminDashboard from './components/AdminDashboard';
 import './App.css';
 
-// Détecte automatiquement l'URL de ton backend sur Codespaces
-const API_URL = window.location.origin.replace('-3000', '-8000');
+// Détection URL Codespaces
+// Dans App.js, tout en haut
+const API_URL = window.location.origin.replace('-3000', '-8000').replace(/\/$/, ""); 
+console.log("🔗 L'API est ici :", API_URL); // Regarde dans la console (F12) si l'URL est correcte
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -29,76 +32,42 @@ export default function App() {
     })
     .then(res => res.ok ? res.json() : Promise.reject())
     .then(data => setUser(data))
-    .catch(() => alert("Accès refusé. Rappel : admin@ecampus.fr / admin"));
-  };
-
-  // --- CONFIG ANIMATION INDIVIDUELLE ---
-  const containerVariants = {
-    animate: { transition: { staggerChildren: 0.1 } } // Délai entre chaque enfant
-  };
-
-  const itemVariants = {
-    initial: { opacity: 0, x: -20 },
-    animate: { opacity: 1, x: 0, transition: { duration: 0.3 } },
-    exit: { opacity: 0, x: 20, transition: { duration: 0.2 } }
+    .catch(() => alert("Accès refusé. Vérifie tes identifiants et le rôle sélectionné."));
   };
 
   if (!user) return (
     <div className="login-container">
-      <div className="logo-placeholder">MMI</div>
-      
       <div className="login-card">
-        <div className="role-title-wrapper">
-          <AnimatePresence mode="wait">
-            <motion.h2 
-              key={roleIndex}
-              initial={{ opacity: 0, y: -10 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              exit={{ opacity: 0, y: 10 }}
-              className="role-title"
-            >
-              {roles[roleIndex].label}
-            </motion.h2>
-          </AnimatePresence>
-        </div>
-        
-        <AnimatePresence mode="wait">
-          <motion.form 
-            key={roleIndex}
-            variants={containerVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            onSubmit={handleLogin}
-          >
-            {/* CHAQUE motion.div CI-DESSOUS S'ANIME L'UN APRÈS L'AUTRE */}
-            <motion.div className="field" variants={itemVariants}>
-              <label>identifiant</label>
-              <input type="text" value={credentials.email} onChange={e => setCredentials({...credentials, email: e.target.value})} placeholder="admin@ecampus.fr" />
-            </motion.div>
-
-            <motion.div className="field" variants={itemVariants}>
-              <label>mot de passe</label>
-              <input type="password" value={credentials.pass} onChange={e => setCredentials({...credentials, pass: e.target.value})} />
-            </motion.div>
-
-            <motion.div className="controls" variants={itemVariants}>
-              <button type="button" className="nav-btn" onClick={() => setRoleIndex((roleIndex - 1 + 3) % 3)}>[ précédent ]</button>
-              <button type="submit" className="connexion-btn">Connexion</button>
-              <button type="button" className="nav-btn" onClick={() => setRoleIndex((roleIndex + 1) % 3)}>[ suivant ]</button>
-            </motion.div>
-          </motion.form>
-        </AnimatePresence>
+        <h2 className="role-title">{roles[roleIndex].label}</h2>
+        <form onSubmit={handleLogin}>
+          <div className="field">
+            <label>identifiant</label>
+            <input type="text" onChange={e => setCredentials({...credentials, email: e.target.value})} />
+          </div>
+          <div className="field">
+            <label>mot de passe</label>
+            <input type="password" onChange={e => setCredentials({...credentials, pass: e.target.value})} />
+          </div>
+          <div className="controls">
+            <button type="button" onClick={() => setRoleIndex((roleIndex - 1 + 3) % 3)}>[ précédent ]</button>
+            <button type="submit" className="connexion-btn">Connexion</button>
+            <button type="button" onClick={() => setRoleIndex((roleIndex + 1) % 3)}>[ suivant ]</button>
+          </div>
+        </form>
       </div>
     </div>
   );
 
+  // Redirection selon le rôle
+  if (user.roles.includes("ROLE_ADMIN")) {
+    return <AdminDashboard user={user} onLogout={() => setUser(null)} API_URL={API_URL} />;
+  }
+
   return (
     <div className="app-content">
-      <motion.h1 initial={{ scale: 0.8 }} animate={{ scale: 1 }}>
-        Bienvenue {user.nom}
-      </motion.h1>
-      <button onClick={() => setUser(null)} className="connexion-btn" style={{marginTop:'20px'}}>Déconnexion</button>
+      <h1>Bienvenue {user.nom}</h1>
+      <p>Interface Étudiant / Enseignant en cours de développement.</p>
+      <button onClick={() => setUser(null)} className="connexion-btn">Déconnexion</button>
     </div>
   );
 }
