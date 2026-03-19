@@ -6,6 +6,17 @@
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  
+  "name": "sae-backend",
+  "version": "1.0.0",
+  "description": "API pour la SAE 403",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3"
+  },
+
   "keywords": [],
   "author": "",
   "license": "ISC",
