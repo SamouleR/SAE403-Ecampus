@@ -1,65 +1,290 @@
-.admin-root {
-  background: #FFF;
-  min-height: 100vh;
-  padding: 40px;
-  font-family: 'Inter', sans-serif;
-  color: #000;
+/* --- VARIABLES --- */
+:root {
+  --nav-red: #c1122f; /* Rouge du header */
+  --text-red: #c1122f; /* Rouge des textes internes */
+  --bg-gray: #fcfcfc;
+  --border-light: #e0e0e0;
+  --radius-card: 12px;
 }
 
-/* NAVIGATION */
-.admin-top-nav {
+.admin-layout {
+  min-height: 100vh;
+  background-color: var(--bg-gray);
+  font-family: 'Inter', sans-serif;
+}
+
+/* --- HEADER --- */
+.admin-header {
+  background-color: var(--nav-red);
+  color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 50px;
-  border-bottom: 2px solid #000;
-  padding-bottom: 20px;
+  padding: 10px 40px;
+  height: 70px;
 }
 
-.admin-logo { font-weight: 900; font-size: 1.4rem; letter-spacing: -1px; }
-.admin-logo .tag { background: #000; color: #FFF; padding: 2px 8px; font-size: 0.6rem; vertical-align: middle; margin-left: 10px; }
-
-.nav-buttons { display: flex; gap: 25px; }
-.nav-buttons button {
-  background: none; border: none; font-weight: 800; text-transform: uppercase;
-  font-size: 0.8rem; cursor: pointer; opacity: 0.3; transition: 0.3s;
+.logo-placeholder {
+  width: 45px;
+  height: 45px;
+  background-color: #d9d9d9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
 }
-.nav-buttons button.active { opacity: 1; border-bottom: 3px solid #000; padding-bottom: 5px; }
-.btn-logout { color: #FF4444 !important; opacity: 1 !important; }
 
-/* CARTES BRUTALISTES (Inspiration image_7826c6) */
-.bw-card {
-  border: 2px solid #000;
-  border-radius: 40px;
-  padding: 40px;
-  background: #FFF;
-  box-shadow: 15px 15px 0px #F5F5F5;
+.header-nav {
+  display: flex;
+  gap: 50px;
+}
+
+.header-nav button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.header-nav button:hover, .header-nav button.active {
+  opacity: 1;
+  font-weight: 700;
+}
+
+.header-right {
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  padding-left: 20px;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-profile svg {
+  width: 35px;
+  height: 35px;
+  background: white;
+  color: var(--nav-red);
+  border-radius: 50%;
+  padding: 5px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.user-role {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.65rem;
+  padding: 0;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  text-decoration: underline;
+}
+
+/* --- MAIN CONTENT --- */
+.admin-content {
+  padding: 30px 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-title {
+  color: var(--text-red);
+  font-size: 1.8rem;
   margin-bottom: 40px;
 }
 
-.card-label { font-size: 0.75rem; color: #888; margin-bottom: 30px; letter-spacing: 1px; }
-
-/* TABLEAU */
-.bw-table { width: 100%; border-collapse: collapse; }
-.bw-table th { text-align: left; font-size: 0.7rem; color: #BBB; padding-bottom: 20px; border-bottom: 1px solid #EEE; }
-.bw-table td { padding: 20px 0; font-weight: 700; border-bottom: 1px solid #FAFAFA; }
-
-.empty-row { text-align: center; padding: 50px 0; color: #CCC; font-weight: 800; font-size: 0.9rem; }
-
-/* BOUTONS ACTIONS */
-.btn-v { background: #E8F5E9; color: #2E7D32; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-right: 10px; }
-.btn-r { background: #FFEBEE; color: #C62828; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; }
-
-/* FORMULAIRE CRÉATION */
-.create-form { display: grid; gap: 20px; max-width: 500px; }
-.input-group { display: flex; flex-direction: column; gap: 8px; }
-.input-group label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
-.input-group input, .input-group select {
-  border: 2px solid #000; padding: 15px; border-radius: 15px; font-weight: 600;
-}
-.btn-submit-black {
-  background: #000; color: #FFF; border: none; padding: 20px; border-radius: 15px;
-  font-weight: 900; text-transform: uppercase; cursor: pointer; margin-top: 10px;
+.tab-container {
+  width: 100%;
 }
 
-.mt-20 { margin-top: 20px; }
+/* --- CARDS GÉNÉRIQUES --- */
+.ui-card {
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 30px 40px;
+  box-shadow: 0px 4px 15px rgba(0,0,0,0.03);
+}
+
+.ui-card h2 {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 30px;
+  font-size: 1.4rem;
+}
+
+/* Layout pour l'onglet étudiant (2 cartes) */
+.two-cards-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+/* --- FORMULAIRES --- */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-red);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.form-group label svg {
+  width: 16px;
+  height: 16px;
+  color: var(--text-red);
+}
+
+.form-group input, .form-group textarea {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.form-group input:focus, .form-group textarea:focus {
+  border-color: var(--text-red);
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding-left: 10px;
+}
+.input-with-icon input {
+  border: none;
+}
+
+/* Boutons rouges */
+.btn-submit-red {
+  background-color: var(--nav-red);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 25px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-submit-red:hover {
+  opacity: 0.9;
+}
+
+.btn-submit-red.centered {
+  display: block;
+  margin: 30px auto 0;
+}
+
+.btn-submit-red.align-right {
+  display: block;
+  margin-left: auto;
+  margin-top: 15px;
+}
+
+/* Grille Création SAE */
+.sae-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+/* --- TABLEAUX DE VALIDATION (Onglet Catalogue) --- */
+.validation-section {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.validation-card {
+  flex-grow: 1;
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 20px 30px;
+  box-shadow: 0px 4px 15px rgba(0,0,0,0.03);
+}
+
+.section-label {
+  width: 150px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.table-header, .table-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr 1fr;
+  align-items: center;
+  padding: 15px 0;
+}
+
+.table-header {
+  font-weight: 600;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.table-row {
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.text-red {
+  color: var(--text-red);
+  font-size: 0.95rem;
+}
+
+.text-red.link {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.action-btns {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-valider, .btn-refuser {
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.btn-valider { background-color: #00ff00; color: black; }
+.btn-refuser { background-color: #ff3333; }

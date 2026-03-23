@@ -1,130 +1,138 @@
-/* Reset de base */
-* {
-  box-sizing: border-box;
+/* --- VARIABLES --- */
+:root {
+  --brand-red: #c61a22; /* Le rouge de ta maquette */
+  --black: #000000;
+  --white: #ffffff;
+  --bg-color: #f7f7f7; /* Un gris très très clair pour faire ressortir la carte blanche */
+  --border-radius: 16px;
+}
+
+body {
   margin: 0;
-  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--black);
 }
 
-/* Centrage total sur la page */
-.login-container {
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  justify-content: center; /* Horizontal */
-  align-items: center;     /* Vertical */
-  background-color: #ffffff;
-  position: relative;
-  overflow: hidden;
-  font-family: sans-serif;
-}
-
-/* Logo en haut à gauche */
-.logo-placeholder {
-  position: absolute;
-  top: 40px;
-  left: 40px;
-  color: #6a1b9a;
-  font-weight: bold;
-  font-size: 1.8rem;
-}
-
-/* La carte grise arrondie */
-.login-card {
-  background-color: #D9D9D9; /* Le gris Figma */
-  padding: 50px 40px;
-  border-radius: 45px;
-  width: 460px;
-  text-align: center;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
-}
-
-/* Fix pour l'animation du titre (empêche le chevauchement) */
-.role-title-wrapper {
-  position: relative;
-  height: 80px; 
+/* --- LAYOUT CARROUSEL --- */
+.login-page {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 25px;
+  min-height: 100vh;
 }
 
-.role-title {
-  position: absolute;
-  font-size: 2.2rem;
-  font-weight: 500;
-  color: #333;
-  white-space: nowrap;
-}
-
-/* Champs de saisie */
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.field {
+.carousel-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 30px; /* Espace entre la carte et les boutons précédent/suivant */
 }
 
-.field label {
-  font-size: 0.9rem;
-  font-weight: bold;
-  color: #444;
-  flex: 1;
-  text-align: left;
-}
-
-.field input {
-  background-color: #FFFFFF;
-  border: none;
-  border-radius: 20px;
-  padding: 12px 18px;
-  width: 270px;
-  font-size: 1rem;
-  outline: none;
-}
-
-/* Barre de navigation et bouton */
-.controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 35px;
-}
-
+/* Boutons Précédent / Suivant */
 .nav-btn {
   background: none;
   border: none;
+  color: var(--brand-red);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  font-family: monospace;
-  font-size: 0.85rem;
-  color: #555;
+  transition: transform 0.2s ease;
 }
 
-.connexion-btn {
-  background-color: #FFFFFF;
-  border: none;
-  border-radius: 20px;
-  padding: 10px 30px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  transition: transform 0.1s;
+.nav-btn:hover {
+  transform: scale(1.05);
 }
 
-.connexion-btn:active {
-  transform: scale(0.95);
-}
-
-/* Page après connexion */
-.app-content {
+/* --- CARTE DE CONNEXION --- */
+.login-card-ui {
+  background: var(--white);
+  padding: 40px 50px;
+  border-radius: var(--border-radius);
+  width: 320px;
+  /* Ombre très douce type "Apple/Moderne" */
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  height: 100vh;
+}
+
+.role-title-ui {
+  color: var(--brand-red);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+/* --- FORMULAIRE --- */
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
+}
+
+.input-group label {
+  display: block;
+  color: var(--brand-red);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--black);
+  flex-shrink: 0;
+}
+
+.input-wrapper input {
+  flex-grow: 1;
+  padding: 10px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-wrapper input:focus {
+  border-color: var(--brand-red);
+}
+
+/* --- BOUTON DE SOUMISSION --- */
+.submit-btn-ui {
+  background-color: var(--black);
+  color: var(--white);
+  border: none;
+  border-radius: 25px; /* Forme de pilule comme sur la maquette */
+  padding: 12px 0;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+  transition: background-color 0.2s;
+}
+
+.submit-btn-ui:hover {
+  background-color: #333333;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 600px) {
+  .carousel-container {
+    flex-direction: column;
+    gap: 20px;
+  }
 }
