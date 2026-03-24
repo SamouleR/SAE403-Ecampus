@@ -1,138 +1,93 @@
-/* --- VARIABLES --- */
-:root {
-  --brand-red: #c61a22; /* Le rouge de ta maquette */
-  --black: #000000;
-  --white: #ffffff;
-  --bg-color: #f7f7f7; /* Un gris très très clair pour faire ressortir la carte blanche */
-  --border-radius: 16px;
+body { 
+  margin: 0; 
+  font-family: 'Inter', sans-serif; 
 }
 
-body {
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  background-color: var(--bg-color);
-  color: var(--black);
-}
-
-/* --- LAYOUT CARROUSEL --- */
-.login-page {
+.login-blue-bg {
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(145deg, #4facfe 0%, #00f2fe 100%);
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  color: white;
 }
 
-.carousel-container {
+.login-carousel-wrapper {
   display: flex;
   align-items: center;
-  gap: 30px; /* Espace entre la carte et les boutons précédent/suivant */
+  gap: 50px;
 }
 
-/* Boutons Précédent / Suivant */
-.nav-btn {
+.nav-btn-white {
   background: none;
   border: none;
-  color: var(--brand-red);
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.nav-btn:hover {
-  transform: scale(1.05);
-}
-
-/* --- CARTE DE CONNEXION --- */
-.login-card-ui {
-  background: var(--white);
-  padding: 40px 50px;
-  border-radius: var(--border-radius);
-  width: 320px;
-  /* Ombre très douce type "Apple/Moderne" */
-  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.role-title-ui {
-  color: var(--brand-red);
+  color: white;
   font-size: 1.2rem;
-  font-weight: 600;
-  margin-top: 0;
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-/* --- FORMULAIRE --- */
-.login-form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.input-group label {
-  display: block;
-  color: var(--brand-red);
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-
-.input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.input-icon {
-  width: 20px;
-  height: 20px;
-  color: var(--black);
-  flex-shrink: 0;
-}
-
-.input-wrapper input {
-  flex-grow: 1;
-  padding: 10px 15px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-family: inherit;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.input-wrapper input:focus {
-  border-color: var(--brand-red);
-}
-
-/* --- BOUTON DE SOUMISSION --- */
-.submit-btn-ui {
-  background-color: var(--black);
-  color: var(--white);
-  border: none;
-  border-radius: 25px; /* Forme de pilule comme sur la maquette */
-  padding: 12px 0;
-  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  margin-top: 10px;
+  transition: transform 0.2s;
+}
+.nav-btn-white:hover { transform: scale(1.1); }
+
+.login-form-blue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  width: 350px;
+}
+
+.login-form-blue h2 {
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.input-group-blue {
   width: 100%;
-  transition: background-color 0.2s;
 }
 
-.submit-btn-ui:hover {
-  background-color: #333333;
+.input-group-blue label {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  font-weight: 500;
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 600px) {
-  .carousel-container {
-    flex-direction: column;
-    gap: 20px;
-  }
+.input-group-blue input {
+  width: 100%;
+  padding: 12px 15px;
+  background: transparent;
+  border: 2px solid white;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.input-group-blue input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px #4facfe inset !important;
+  -webkit-text-fill-color: white !important;
+}
+
+.btn-blue-outline {
+  margin-top: 15px;
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+  border-radius: 30px;
+  padding: 12px 40px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-blue-outline:hover {
+  background: white;
+  color: #00f2fe;
 }

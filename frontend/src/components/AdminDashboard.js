@@ -1,172 +1,263 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './AdminDashboard.css';
 
-export default function AdminDashboard({ user, onLogout }) {
-  // Gestion des onglets : 'catalogue' (validation), 'sae' (création), 'etudiant' (ajout)
+export default function AdminDashboard({ user, onLogout, API_URL }) {
   const [activeTab, setActiveTab] = useState('catalogue');
+  const token = localStorage.getItem('token');
+
+  // MODIFIÉ : Gestion des vrais fichiers (null par défaut)
+  const [saeForm, setSaeForm] = useState({ titre: '', ressource: '', date: '', desc: '', imageFile: null, pdfFile: null });
+  const [studentForm, setStudentForm] = useState({ email: '', password: '' });
+  const [enrollForm, setEnrollForm] = useState({ email: '', ressource: '' });
+  
+  const [pendingSaes, setPendingSaes] = useState([]);
+  const [allSaes, setAllSaes] = useState([]); // NOUVEAU : Toutes les SAEs
+  const [pendingUsers, setPendingUsers] = useState([]);
+  const [students, setStudents] = useState([]);
+
+  const [annonces, setAnnonces] = useState([]);
+  const [showAnnonces, setShowAnnonces] = useState(false);
+
+  const fetchAnnonces = useCallback(() => {
+    fetch(`${API_URL}/api/annonces`, { headers: { 'Authorization': `Bearer ${token}` } })
+    .then(res => res.json()).then(data => setAnnonces(Array.isArray(data) ? data : []));
+  }, [API_URL, token]);
+
+  const fetchCatalogueData = useCallback(() => {
+    fetch(`${API_URL}/api/admin/pending-saes`, { headers: { 'Authorization': `Bearer ${token}` } })
+    .then(res => res.json()).then(data => setPendingSaes(Array.isArray(data) ? data : []));
+    
+    // Fetch Toutes les SAEs
+    fetch(`${API_URL}/api/admin/all-saes`, { headers: { 'Authorization': `Bearer ${token}` } })
+    .then(res => res.json()).then(data => setAllSaes(Array.isArray(data) ? data : []));
+    
+    fetch(`${API_URL}/api/admin/pending-users`, { headers: { 'Authorization': `Bearer ${token}` } })
+    .then(res => res.json()).then(data => setPendingUsers(Array.isArray(data) ? data : []));
+
+    fetch(`${API_URL}/api/admin/etudiants`, { headers: { 'Authorization': `Bearer ${token}` } })
+    .then(res => res.json()).then(data => setStudents(Array.isArray(data) ? data : []));
+  }, [API_URL, token]);
+
+  useEffect(() => {
+    fetchAnnonces();
+    if (activeTab === 'catalogue' || activeTab === 'etudiant') {
+      fetchCatalogueData();
+    }
+  }, [activeTab, fetchAnnonces, fetchCatalogueData]);
+
+  // MODIFIÉ : Envoi de fichiers via FormData
+  const handleCreateSAE = (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('titre', saeForm.titre);
+    formData.append('ressource', saeForm.ressource);
+    formData.append('date', saeForm.date);
+    formData.append('desc', saeForm.desc);
+    if (saeForm.imageFile) formData.append('image', saeForm.imageFile);
+    if (saeForm.pdfFile) formData.append('pdf', saeForm.pdfFile);
+
+    fetch(`${API_URL}/api/admin/saes`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }, // Attention: PAS de Content-Type ici avec FormData !
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => { 
+      alert(data.message); 
+      setSaeForm({ titre: '', ressource: '', date: '', desc: '', imageFile: null, pdfFile: null }); 
+      fetchAnnonces(); 
+    });
+  };
+
+  const handleCreateStudent = (e) => {
+    e.preventDefault();
+    fetch(`${API_URL}/api/admin/etudiants`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(studentForm)
+    }).then(res => res.json()).then(data => { 
+      alert(data.message); setStudentForm({ email: '', password: '' }); fetchCatalogueData(); 
+    });
+  };
+
+  const handleEnrollStudent = (e) => {
+    e.preventDefault();
+    fetch(`${API_URL}/api/admin/inscriptions`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(enrollForm)
+    }).then(res => res.json()).then(data => { alert(data.message); setEnrollForm({ email: '', ressource: '' }); });
+  };
+
+  const handleValidateSae = (id) => {
+    fetch(`${API_URL}/api/admin/saes/${id}/validate`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } })
+    .then(res => res.json()).then(data => { alert(data.message); fetchCatalogueData(); });
+  };
+
+  const handleValidateUser = (id) => {
+    fetch(`${API_URL}/api/admin/users/${id}/validate`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } })
+    .then(res => res.json()).then(data => { alert(data.message); fetchCatalogueData(); });
+  };
+
+  const handleChangePassword = (id, email) => {
+    const newPassword = window.prompt(`Entrez le NOUVEAU mot de passe pour l'étudiant : ${email}`);
+    if (!newPassword) return;
+    fetch(`${API_URL}/api/admin/users/${id}/password`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ newPassword })
+    })
+    .then(res => res.json()).then(data => alert(data.message));
+  };
 
   return (
-    <div className="admin-layout">
-      {/* --- HEADER (Bandeau Rouge) --- */}
-      <header className="admin-header">
-        <div className="header-left">
-          <div className="logo-placeholder">LOGO</div>
-        </div>
-        
-        <nav className="header-nav">
+    <div className="admin-blue-layout">
+      
+      <header className="pill-header">
+        <nav className="header-nav-white">
           <button className={activeTab === 'catalogue' ? 'active' : ''} onClick={() => setActiveTab('catalogue')}>Catalogue</button>
           <button className={activeTab === 'sae' ? 'active' : ''} onClick={() => setActiveTab('sae')}>SAE</button>
           <button className={activeTab === 'etudiant' ? 'active' : ''} onClick={() => setActiveTab('etudiant')}>Étudiant</button>
         </nav>
+        <div className="header-actions">
+          
+          <div className="notification-wrapper">
+            <span className="bell-icon" onClick={() => setShowAnnonces(!showAnnonces)}>🔔</span>
+            {annonces.length > 0 && <span className="badge">{annonces.length}</span>}
+            {showAnnonces && (
+              <div className="annonces-dropdown">
+                <h4>Annonces de la plateforme</h4>
+                {annonces.length === 0 ? <p>Aucune annonce.</p> : annonces.map(a => (
+                  <div key={a.id} className="annonce-item">
+                    <strong>{a.titre}</strong>
+                    <p>{a.contenu}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-        <div className="header-right">
-          <div className="user-profile">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            <div className="user-info">
-              <span className="user-role">Administrateur</span>
-              <button onClick={onLogout} className="logout-btn">FERMER LA SESSION</button>
+          <span>⚙️</span>
+          <div className="user-profile-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <div className="user-info-text">
+              <span className="role-bold">Administrateur</span>
+              <button onClick={onLogout}>FERMER LA SESSION</button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* --- CONTENU PRINCIPAL --- */}
-      <main className="admin-content">
-        <h1 className="page-title">Administrateur</h1>
-
+      <main className="admin-content-centered">
         <AnimatePresence mode="wait">
           
-          {/* VUE 1 : CATALOGUE (Validations - image_669528) */}
+          {/* CATALOGUE */}
           {activeTab === 'catalogue' && (
-            <motion.div key="catalogue" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="tab-container">
+            <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="tab-container">
               
-              <div className="validation-section">
-                <div className="validation-card">
-                  <div className="table-header">
-                    <span>Projet</span>
-                    <span>Enseignant</span>
-                    <span>Action</span>
+              {/* NOUVEAU : LISTE DE TOUTES LES SAEs */}
+              <h2 className="black-title">Tous les projets SAE</h2>
+              <div className="glass-card" style={{marginBottom: '40px'}}>
+                <div className="table-header-white"><span>Projet</span><span>Statut</span><span>Ressources</span></div>
+                {allSaes.map(sae => (
+                  <div className="table-row-white" key={sae.id}>
+                    <span>{sae.titre}</span>
+                    <span style={{color: sae.status === 'VALIDE' ? '#00e676' : 'orange'}}>{sae.status}</span>
+                    <div className="file-links">
+                      {sae.pdf_link && <a href={`${API_URL}${sae.pdf_link}`} target="_blank" rel="noreferrer" className="link-badge">Ouvrir PDF</a>}
+                      {sae.image && <a href={`${API_URL}${sae.image}`} target="_blank" rel="noreferrer" className="link-badge">Voir Image</a>}
+                    </div>
                   </div>
-                  <div className="table-row">
-                    <span className="text-red">SAE 302 UX/UI</span>
-                    <span className="text-red">Mr Ben Amor</span>
+                ))}
+                {allSaes.length === 0 && <p style={{marginTop:'15px'}}>Aucune SAE trouvée dans la BDD.</p>}
+              </div>
+
+              {/* ... (Garde tes autres listes pendingUsers, students ici) ... */}
+              <h2 className="black-title">Inscriptions (En attente)</h2>
+              <div className="glass-card" style={{marginBottom: '40px'}}>
+                <div className="table-header-white"><span>Email</span><span>Rôle</span><span>Action</span></div>
+                {pendingUsers.map(u => (
+                  <div className="table-row-white" key={u.id}>
+                    <span>{u.email}</span>
+                    <span>{u.role}</span>
                     <div className="action-btns">
-                      <button className="btn-valider">VALIDER</button>
-                      <button className="btn-refuser">REFUSE</button>
+                      <button className="btn-validate-green" onClick={() => handleValidateUser(u.id)}>VALIDER LE COMPTE</button>
                     </div>
                   </div>
-                </div>
-                <span className="section-label">Publication SAE</span>
+                ))}
+                {pendingUsers.length === 0 && <p style={{marginTop:'15px'}}>Aucun compte en attente.</p>}
               </div>
 
-              <div className="validation-section">
-                <div className="validation-card">
-                  <div className="table-header">
-                    <span>Nom complet</span>
-                    <span>Mot de passe</span>
-                    <span>Module/SAE</span>
+              <h2 className="black-title">Gestion des Étudiants</h2>
+              <div className="glass-card">
+                <div className="table-header-white"><span>Identifiant</span><span>Mot de passe</span><span>Statut</span></div>
+                {students.map(s => (
+                  <div className="table-row-white" key={s.id}>
+                    <span>{s.email}</span>
+                    <span onClick={() => handleChangePassword(s.id, s.email)} style={{cursor:'pointer', textDecoration:'underline', color:'#00f2fe', fontWeight: 'bold'}}>changer le mdp</span>
+                    <span>{s.status}</span>
                   </div>
-                  <div className="table-row">
-                    <span className="text-red">Samuel RALAIKOA</span>
-                    <span className="text-red link">changer le mdp</span>
-                    <span className="text-red">TOUS</span>
-                  </div>
-                  <div className="table-row">
-                    <span className="text-red">Jayson BELLEVAL</span>
-                    <span className="text-red link">changer le mdp</span>
-                    <span className="text-red">TOUS</span>
-                  </div>
-                </div>
-                <span className="section-label">Inscription élèves</span>
+                ))}
               </div>
 
             </motion.div>
           )}
 
-          {/* VUE 2 : SAE (Création - image_669229) */}
+          {/* CRÉATION SAE */}
           {activeTab === 'sae' && (
-            <motion.div key="sae" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="tab-container">
-              <div className="ui-card create-sae-card">
-                <h2>Créer une SAE</h2>
-                <form className="sae-form-grid">
+            <motion.div key="sae" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="tab-container">
+              <div className="glass-card">
+                <h2 className="black-title-inside">Créer une SAE</h2>
+                <form className="sae-form-grid" onSubmit={handleCreateSAE}>
                   <div className="col-left">
-                    <div className="form-group">
-                      <label>Titre de la SAE</label>
-                      <input type="text" />
-                    </div>
-                    <div className="form-group">
-                      <label>Ressource concerné</label>
-                      <input type="text" />
-                    </div>
-                    <div className="form-group">
+                    <div className="input-group-blue"><label>Titre de la SAE</label><input type="text" value={saeForm.titre} onChange={e => setSaeForm({...saeForm, titre: e.target.value})} required /></div>
+                    <div className="input-group-blue"><label>Ressource concerné</label><input type="text" value={saeForm.ressource} onChange={e => setSaeForm({...saeForm, ressource: e.target.value})} required/></div>
+                    
+                    {/* INPUT FICHIER : IMAGE */}
+                    <div className="input-group-blue file-input">
                       <label>Image source</label>
-                      <input type="text" />
+                      <input type="file" accept="image/*" onChange={e => setSaeForm({...saeForm, imageFile: e.target.files[0]})} />
                     </div>
-                    <div className="form-group">
-                      <label>Date de rendu :</label>
-                      <div className="input-with-icon">
-                        <span>📅</span>
-                        <input type="text" defaultValue="15-Janvier-2025" />
-                      </div>
-                    </div>
+                    
+                    <div className="input-group-blue"><label>Date de rendu :</label><input type="date" value={saeForm.date} onChange={e => setSaeForm({...saeForm, date: e.target.value})} required /></div>
                   </div>
-                  
                   <div className="col-right">
-                    <div className="form-group">
+                    
+                    {/* INPUT FICHIER : PDF */}
+                    <div className="input-group-blue file-input">
                       <label>Ressources PDF</label>
-                      <input type="text" />
+                      <input type="file" accept="application/pdf" onChange={e => setSaeForm({...saeForm, pdfFile: e.target.files[0]})} />
                     </div>
-                    <div className="form-group">
-                      <label>Descriptions techniques</label>
-                      <textarea rows="6"></textarea>
-                    </div>
-                    <button type="submit" className="btn-submit-red align-right">Proposer la validation à l'admin</button>
+
+                    <div className="input-group-blue"><label>Descriptions techniques</label><textarea rows="6" value={saeForm.desc} onChange={e => setSaeForm({...saeForm, desc: e.target.value})} required></textarea></div>
+                    <button type="submit" className="btn-blue-outline centered-btn">Créer une SAE</button>
                   </div>
                 </form>
               </div>
             </motion.div>
           )}
 
-          {/* VUE 3 : ÉTUDIANT (Ajout - image_669509) */}
+          {/* ÉTUDIANTS */}
           {activeTab === 'etudiant' && (
-            <motion.div key="etudiant" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="tab-container two-cards-layout">
-              
-              <div className="ui-card">
-                <h2>Rajouter un étudiant</h2>
-                <form className="student-form">
-                  <div className="form-group">
-                    <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Identifiant de l'étudiant</label>
-                    <input type="text" />
-                  </div>
-                  <div className="form-group">
-                    <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg> Mot de passe de l'étudiant</label>
-                    <input type="password" />
-                  </div>
-                  <button type="submit" className="btn-submit-red centered">Inscrire pour approbation</button>
+            <motion.div key="etu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="tab-container cards-row">
+              <div className="glass-card small-card">
+                <h2 className="black-title-inside">Rajouter un étudiant</h2>
+                <form onSubmit={handleCreateStudent}>
+                  <div className="input-group-blue"><label>Identifiant de l'étudiant</label><input type="email" value={studentForm.email} onChange={e => setStudentForm({...studentForm, email: e.target.value})} required /></div>
+                  <div className="input-group-blue" style={{marginTop:'15px'}}><label>Mot de passe</label><input type="password" value={studentForm.password} onChange={e => setStudentForm({...studentForm, password: e.target.value})} required /></div>
+                  <button type="submit" className="btn-blue-outline centered-btn">INSCRIPTION</button>
                 </form>
               </div>
 
-              <div className="ui-card">
-                <h2>Rajouter un étudiant dans un module ou SAE</h2>
-                <form className="student-form">
-                  <div className="form-group">
-                    <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Identifiant de l'étudiant</label>
-                    <input type="text" />
-                  </div>
-                  <div className="form-group">
-                    <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg> Ressource concerné</label>
-                    <input type="text" />
-                  </div>
-                  <button type="submit" className="btn-submit-red centered">Rajouter l'élève</button>
+              <div className="glass-card small-card">
+                <h2 className="black-title-inside">Rajouter un étudiant dans un module ou SAE</h2>
+                <form onSubmit={handleEnrollStudent}>
+                  <div className="input-group-blue"><label>Identifiant de l'étudiant</label><input type="email" value={enrollForm.email} onChange={e => setEnrollForm({...enrollForm, email: e.target.value})} required /></div>
+                  <div className="input-group-blue" style={{marginTop:'15px'}}><label>Ressource concerné</label><input type="text" value={enrollForm.ressource} onChange={e => setEnrollForm({...enrollForm, ressource: e.target.value})} required /></div>
+                  <button type="submit" className="btn-blue-outline centered-btn">RAJOUTER</button>
                 </form>
               </div>
-
             </motion.div>
           )}
+
         </AnimatePresence>
       </main>
     </div>
