@@ -1,93 +1,278 @@
-body { 
-  margin: 0; 
-  font-family: 'Inter', sans-serif; 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+/* --- BASE --- */
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+  background: #4facfe; /* Couleur de secours */
 }
 
-.login-blue-bg {
+/* FOND GÉNÉRAL BLEU DÉGRADÉ */
+.login-blue-bg, .public-wrapper {
   min-height: 100vh;
   width: 100vw;
   background: linear-gradient(145deg, #4facfe 0%, #00f2fe 100%);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  color: white;
+  position: relative;
+}
+
+/* --- NAVBAR STYLE "PILL" (GÉLULE) --- */
+.public-header-pill {
+  position: fixed;
+  top: 20px;
+  width: 90%;
+  max-width: 1100px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(15px);
+  padding: 12px 40px;
+  border-radius: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.logo-text {
+  font-weight: 800;
+  letter-spacing: 2px;
+  font-size: 1.2rem;
   color: white;
 }
 
+/* FILTRES DANS LA NAVBAR */
+.nav-filters {
+  display: flex;
+  gap: 30px;
+  color: white;
+  font-weight: 500;
+}
+
+/* STYLE DROPDOWNS GLASS */
+.dropdown {
+  position: relative;
+  cursor: pointer;
+}
+
+.dropdown-label {
+  transition: opacity 0.2s;
+}
+
+.dropdown:hover .dropdown-label {
+  opacity: 0.7;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  color: #333;
+  min-width: 150px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  margin-top: 15px;
+  padding: 10px 0;
+  overflow: hidden;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu div {
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+
+.dropdown-menu div:hover {
+  background: #4facfe;
+  color: white;
+}
+
+.btn-connexion-pill {
+  background: white;
+  color: #4facfe;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 30px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.btn-connexion-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background: #f0f0f0;
+}
+
+/* --- VUE PUBLIC CONTENU --- */
+.public-main {
+  margin-top: 120px;
+  text-align: center;
+  width: 90%;
+  max-width: 1200px;
+}
+
+.vue-title {
+  font-size: 3rem;
+  margin-bottom: 40px;
+  font-weight: 700;
+}
+
+.sae-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 30px;
+  padding-bottom: 50px;
+}
+
+/* --- CARTES GLASSMORPHISM --- */
+.sae-glass-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+  text-align: left;
+}
+
+.sae-glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.sae-img {
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sae-info {
+  padding: 25px;
+}
+
+.ressource-tag {
+  background: #ffcc00;
+  color: black;
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sae-info h3 {
+  margin: 15px 0 10px;
+  font-size: 1.2rem;
+}
+
+.sae-info p {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  line-height: 1.5;
+  height: 50px; /* Limite la description */
+  overflow: hidden;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.note {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.btn-details-blue {
+  background: white;
+  color: #4facfe;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-details-blue:hover {
+  background: #f0f0f0;
+}
+
+/* --- LOGIN CAROUSEL & FORMS --- */
 .login-carousel-wrapper {
   display: flex;
   align-items: center;
-  gap: 50px;
+  gap: 60px;
 }
 
 .nav-btn-white {
   background: none;
   border: none;
   color: white;
-  font-size: 1.2rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s;
+  font-size: 1.1rem;
 }
-.nav-btn-white:hover { transform: scale(1.1); }
 
 .login-form-blue {
+  width: 350px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 40px;
+  border-radius: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 25px;
-  width: 350px;
-}
-
-.login-form-blue h2 {
-  font-size: 1.5rem;
-  letter-spacing: 1px;
-  margin-bottom: 20px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.input-group-blue {
-  width: 100%;
-}
-
-.input-group-blue label {
-  display: block;
-  font-size: 1rem;
-  margin-bottom: 8px;
-  font-weight: 500;
+  gap: 20px;
+  backdrop-filter: blur(10px);
 }
 
 .input-group-blue input {
   width: 100%;
-  padding: 12px 15px;
-  background: transparent;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
   border: 2px solid white;
-  border-radius: 8px;
+  border-radius: 10px;
   color: white;
-  font-size: 1rem;
   outline: none;
   box-sizing: border-box;
 }
 
-.input-group-blue input:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 30px #4facfe inset !important;
-  -webkit-text-fill-color: white !important;
-}
-
 .btn-blue-outline {
-  margin-top: 15px;
-  background: transparent;
-  color: white;
-  border: 2px solid white;
+  padding: 12px;
+  background: white;
+  color: #4facfe;
+  border: none;
   border-radius: 30px;
-  padding: 12px 40px;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.3s;
 }
 
-.btn-blue-outline:hover {
-  background: white;
-  color: #00f2fe;
+.back-to-public {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  color: white;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
 }
