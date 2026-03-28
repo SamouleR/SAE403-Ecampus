@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './TeacherDashboard.css';
 
 export default function TeacherDashboard({ user, onLogout, API_URL }) {
-  // États de l'interface
+  // --- ÉTATS ---
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [filterSae, setFilterSae] = useState('TOUTES');
@@ -13,9 +13,11 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
   const [rendus, setRendus] = useState([]);
   const [annonces, setAnnonces] = useState([]);
 
+  // État pour stocker les élèves du projet sélectionné (Modal)
+  const [selectedProjectRendus, setSelectedProjectRendus] = useState(null);
+
   // Formulaires
   const [saeForm, setSaeForm] = useState({ titre: '', ressource: '', date: '', desc: '', promotion: '2024', semestre: 'S1' });
-  const [annonceForm, setAnnonceForm] = useState({ titre: '', contenu: '' });
   const [imageFile, setImageFile] = useState(null);
 
   const token = localStorage.getItem('token');
@@ -47,7 +49,21 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // --- CALCULS STATISTIQUES ---
+  // --- ACTIONS ---
+  
+  // Fonction pour voir qui a rempli quoi pour une SAE précise
+  const handleViewRendus = async (saeId) => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/rendus/sae/${saeId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setSelectedProjectRendus(data);
+    } catch (err) {
+      console.error("Erreur lors de la récupération des rendus par SAE", err);
+    }
+  };
+
   const stats = useMemo(() => {
     const totalRendus = rendus.length;
     const notesValides = rendus.map(r => parseFloat(r.note)).filter(n => !isNaN(n));
@@ -55,7 +71,6 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
     return { totalRendus, moyenne, totalSaes: saes.length };
   }, [rendus, saes]);
 
-  // --- ACTIONS ---
   const handleCreateSae = async (e) => {
     e.preventDefault();
     const formData = new FormData();
@@ -82,7 +97,7 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ rendu_id: renduId, note: note })
     });
-    fetchData(); // Silencieux pour l'expérience utilisateur
+    fetchData();
   };
 
   const filteredRendus = filterSae === 'TOUTES' ? rendus : rendus.filter(r => r.sae_titre === filterSae);
@@ -97,7 +112,8 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
         <div className="brand">ECAMPUS <span className="badge-admin">ADMIN</span></div>
         <nav className="nav-items">
           <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>Dashboard</button>
-          <button className={activeTab === 'rendus' ? 'active' : ''} onClick={() => setActiveTab('rendus')}>Rendus</button>
+          <button className={activeTab === 'projets' ? 'active' : ''} onClick={() => setActiveTab('projets')}>Tous les projets</button>
+          <button className={activeTab === 'rendus' ? 'active' : ''} onClick={() => setActiveTab('rendus')}>Notes</button>
           <button className={activeTab === 'creation' ? 'active' : ''} onClick={() => setActiveTab('creation')}>Nouvelle SAE</button>
         </nav>
         <div className="prof-info">
@@ -131,7 +147,29 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
             </motion.div>
           )}
 
-          {/* VUE 2 : GESTION DES RENDUS (TABLEAU COMPLEXE) */}
+          {/* VUE : TOUS LES PROJETS (Image 806539.png) */}
+          {activeTab === 'projets' && (
+            <motion.div key="projets-list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel full">
+              <h2 className="panel-title-white">Tous les projets SAE</h2>
+              <div className="sae-list-wrapper">
+                {saes.map(sae => (
+                  <div key={sae.id} className="sae-item-row-glass" onClick={() => handleViewRendus(sae.id)}>
+                    <div className="sae-row-info">
+                      <span className="sae-row-title">{sae.titre}</span>
+                      <span className="status-badge-green">VALIDE</span>
+                    </div>
+                    <div className="sae-row-actions">
+                      <button className="btn-action-pill">Ouvrir PDF</button>
+                      <button className="btn-action-pill white-bg">Voir Image</button>
+                      <button className="btn-blue-pill" onClick={(e) => { e.stopPropagation(); handleViewRendus(sae.id); }}>Voir les élèves →</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* VUE : GESTION DES NOTES */}
           {activeTab === 'rendus' && (
             <motion.div key="rd" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel full">
               <div className="panel-header">
@@ -148,7 +186,7 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
                     <th>Étudiant</th>
                     <th>SAE / Ressource</th>
                     <th>Date de dépôt</th>
-                    <th>Fichiers / Liens</th>
+                    <th>Actions</th>
                     <th>Note /20</th>
                   </tr>
                 </thead>
@@ -160,15 +198,13 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
                       <td>{new Date(r.date_depot).toLocaleDateString()}</td>
                       <td>
                         <div className="action-links">
-                          {r.fichier_rendu && <a href={`${API_URL}${r.fichier_rendu}`} target="_blank" className="dl-btn">Fichier 📥</a>}
-                          {r.lien_rendu && <a href={r.lien_rendu} target="_blank" className="dl-btn">Lien 🔗</a>}
+                          {r.fichier_rendu && <a href={`${API_URL}${r.fichier_rendu}`} target="_blank" rel="noreferrer" className="dl-btn">Fichier 📥</a>}
                         </div>
                       </td>
                       <td>
                         <input 
                           type="number" 
                           max="20" 
-                          min="0" 
                           className="note-input-field" 
                           defaultValue={r.note} 
                           onBlur={(e) => handleUpdateNote(r.id, e.target.value)}
@@ -181,44 +217,81 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
             </motion.div>
           )}
 
-          {/* VUE 3 : FORMULAIRE DE CRÉATION SAE */}
+          {/* VUE : FORMULAIRE DE CRÉATION */}
           {activeTab === 'creation' && (
             <motion.div key="cr" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-panel medium">
-              <h2>Publier un nouveau projet</h2>
+              <h2>Créer une SAE</h2>
               <form onSubmit={handleCreateSae} className="complex-form">
-                <div className="form-group">
-                  <input type="text" placeholder="Titre de la SAE" onChange={e => setSaeForm({...saeForm, titre: e.target.value})} required />
-                  <input type="text" placeholder="Code Ressource (ex: R3.01)" onChange={e => setSaeForm({...saeForm, ressource: e.target.value})} required />
+                <div className="form-grid">
+                  <div className="input-group">
+                    <label>Titre de la SAE</label>
+                    <input type="text" onChange={e => setSaeForm({...saeForm, titre: e.target.value})} required />
+                  </div>
+                  <div className="input-group">
+                    <label>Ressources PDF</label>
+                    <input type="file" />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <select onChange={e => setSaeForm({...saeForm, promotion: e.target.value})}>
-                    <option value="2024">Promotion 2024</option>
-                    <option value="2025">Promotion 2025</option>
-                    <option value="2026">Promotion 2026</option>
-                  </select>
-                  <select onChange={e => setSaeForm({...saeForm, semestre: e.target.value})}>
-                    <option value="S1">Semestre 1</option>
-                    <option value="S2">Semestre 2</option>
-                    <option value="S3">Semestre 3</option>
-                    <option value="S4">Semestre 4</option>
-                  </select>
+                <div className="input-group">
+                    <label>Ressource concernée</label>
+                    <input type="text" onChange={e => setSaeForm({...saeForm, ressource: e.target.value})} required />
                 </div>
-                <div className="form-group">
-                  <label>Date limite de rendu :</label>
-                  <input type="date" onChange={e => setSaeForm({...saeForm, date: e.target.value})} required />
+                <div className="input-group">
+                    <label>Description technique</label>
+                    <textarea onChange={e => setSaeForm({...saeForm, desc: e.target.value})}></textarea>
                 </div>
-                <textarea placeholder="Consignes détaillées pour les étudiants..." onChange={e => setSaeForm({...saeForm, desc: e.target.value})}></textarea>
-                <div className="file-input-wrapper">
-                   <label>Image de couverture :</label>
-                   <input type="file" onChange={e => setImageFile(e.target.files[0])} />
+                <div className="form-grid">
+                  <div className="input-group">
+                    <label>Image source</label>
+                    <input type="file" onChange={e => setImageFile(e.target.files[0])} />
+                  </div>
+                  <div className="input-group">
+                    <label>Date de rendu</label>
+                    <input type="date" onChange={e => setSaeForm({...saeForm, date: e.target.value})} required />
+                  </div>
                 </div>
-                <button type="submit" className="btn-gradient">LANCER LE PROJET</button>
+                <button type="submit" className="btn-publish-white">Créer une SAE</button>
               </form>
             </motion.div>
           )}
 
         </AnimatePresence>
       </main>
+
+      {/* --- MODAL D'AFFICHAGE DES ÉLÈVES (VUE DÉTAILLÉE) --- */}
+      <AnimatePresence>
+        {selectedProjectRendus && (
+          <div className="modal-overlay-blue" onClick={() => setSelectedProjectRendus(null)}>
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="modal-content-glass" 
+              onClick={e => e.stopPropagation()}
+            >
+              <h3>Suivi des élèves - {selectedProjectRendus.length} inscrits</h3>
+              <div className="student-list-scroll">
+                {selectedProjectRendus.map((r, index) => (
+                  <div key={index} className="student-render-row">
+                    <div className="student-info">
+                      <span className="student-email">{r.email}</span>
+                      <span className={`render-status ${r.date_depot ? 'done' : 'missing'}`}>
+                        {r.date_depot ? `✅ Rendu le ${new Date(r.date_depot).toLocaleDateString()}` : "❌ Pas encore rendu"}
+                      </span>
+                    </div>
+                    {r.fichier_rendu && (
+                      <a href={`${API_URL}${r.fichier_rendu}`} target="_blank" rel="noreferrer" className="dl-link-small">
+                        Voir le travail
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button className="btn-close-modal" onClick={() => setSelectedProjectRendus(null)}>Fermer</button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

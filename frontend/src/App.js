@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminDashboard from './components/AdminDashboard';
 import StudentDashboard from './components/StudentDashboard';
-import TeacherDashboard from './TeacherDashboard';
+import TeacherDashboard from './components/TeacherDashboard';
 import PublicLanding from './components/PublicLanding'; 
 import './App.css';
 

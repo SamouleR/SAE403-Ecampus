@@ -8,14 +8,16 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
   const [annonces, setAnnonces] = useState([]);
   const [showNotifs, setShowNotifs] = useState(false);
   
+  // Gère la SAE cliquée pour la vue détaillée (Bouton Voir le projet)
   const [selectedSae, setSelectedSae] = useState(null); 
+  
   const [filterMatiere, setFilterMatiere] = useState('TOUTES');
   const [passwords, setPasswords] = useState({ newPass: '', confirmPass: '' });
   
   // États pour le rendu
   const [submissions, setSubmissions] = useState({});
   const [renderLink, setRenderLink] = useState("");
-  const [tempFile, setTempFile] = useState(null); // <--- AJOUTÉ : Pour stocker le fichier avant validation
+  const [tempFile, setTempFile] = useState(null); 
 
   const token = localStorage.getItem('token');
 
@@ -43,7 +45,8 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
             fileName: sub.fichier_rendu, 
             link: sub.lien_rendu, 
             date: sub.date_depot, 
-            status: 'Remis pour évaluation' 
+            status: 'Remis pour évaluation',
+            note: sub.note // Récupération de la note si elle existe
           };
         });
       }
@@ -59,13 +62,13 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
 
   // --- LOGIQUE DE RENDU CORRIGÉE ---
   const handleFileUpload = (saeId, e) => {
-    // CAS 1 : L'utilisateur vient de choisir un fichier via l'input
+    // CAS 1 : Sélection d'un fichier (via input)
     if (e && e.target && e.target.files) {
       setTempFile(e.target.files[0]);
       return; 
     }
 
-    // CAS 2 : On a cliqué sur "Valider le rendu" (e n'a pas de files ici)
+    // CAS 2 : Clic sur le bouton "Valider le rendu"
     if (!tempFile && !renderLink) {
       alert("Veuillez choisir un fichier ou ajouter un lien !");
       return;
@@ -73,7 +76,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
 
     const formData = new FormData();
     formData.append('sae_id', saeId);
-    if (tempFile) formData.append('devoir', tempFile); // 'devoir' matchera ton server.js
+    if (tempFile) formData.append('devoir', tempFile); 
     formData.append('lien', renderLink);
 
     fetch(`${API_URL}/api/etudiant/rendre`, {
@@ -85,7 +88,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
     .then(data => {
       alert(data.message);
       setRenderLink("");
-      setTempFile(null); // On vide le fichier temporaire
+      setTempFile(null); 
       fetchMySubmissions(); 
     })
     .catch(err => alert("Erreur lors de l'envoi"));
@@ -101,7 +104,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
   const changeTab = (tab) => {
     setActiveTab(tab);
     setSelectedSae(null);
-    setTempFile(null); // Reset fichier quand on change d'onglet
+    setTempFile(null);
   };
 
   const matieres = ['TOUTES', ...new Set(saes.map(s => s.ressource).filter(Boolean))];
@@ -125,10 +128,10 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
     const today = new Date();
     const limit = new Date(dateRendu);
     const diffTime = limit - today;
-    if (diffTime < 0) return "Délai dépassé";
+    if (diffTime < 0) return "Délai passé";
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    return `Il reste ${diffDays} jours et ${diffHours} h`;
+    return `Il reste ${diffDays} j et ${diffHours} h`;
   };
 
   const handleUpdatePassword = (e) => {
@@ -157,7 +160,6 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
         <div className="header-actions">
           <div className="notification-wrapper">
             <span className="bell-icon" onClick={() => setShowNotifs(!showNotifs)}>🔔</span>
-            {(annonces.length > 0 || saes.length > 0) && <span className="badge">{annonces.length + saes.length}</span>}
             <AnimatePresence>
               {showNotifs && (
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="notifs-panel">
@@ -166,7 +168,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                     {saes.map(sae => {
                       const status = submissions[sae.id] ? {label: "Rendu", color: "green"} : getSaeStatus(sae.date_rendu);
                       return (
-                        <div className="notif-item" key={`suivi-${sae.id}`} onClick={() => {changeTab('sae'); setSelectedSae(sae); setShowNotifs(false);}} style={{cursor:'pointer'}}>
+                        <div className="notif-item" key={`suivi-${sae.id}`} onClick={() => {changeTab('sae'); setSelectedSae(sae); setShowNotifs(false);}}>
                           <div className="notif-header">
                             <div className="status-indicator">
                               <span className={`status-square ${status.color}`}></span>
@@ -198,30 +200,27 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
           {activeTab === 'catalogue' && (
             <motion.div key="cat" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="tab-container">
               <div className="title-row">
-                <div>
-                  <h1 className="white-title-large">Catalogue des SAE</h1>
-                  <p className="white-subtitle">Tous les projets publiés.</p>
-                </div>
-                <div className="filter-container">
-                  <label>Filtrer par matière :</label>
-                  <select value={filterMatiere} onChange={(e) => setFilterMatiere(e.target.value)} className="glass-select">
-                    {matieres.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                </div>
+                <h1 className="white-title-large">Catalogue des SAE</h1>
+                <select value={filterMatiere} onChange={(e) => setFilterMatiere(e.target.value)} className="glass-select">
+                  {matieres.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
               </div>
 
               <div className="sae-grid">
                 {filteredCatalogue.map(sae => (
-                  <div className="sae-glass-card clickable-card" key={sae.id} onClick={() => { changeTab('sae'); setSelectedSae(sae); }}>
-                    {sae.image ? <div className="sae-image-container" style={{backgroundImage: `url(${API_URL}${sae.image})`}}></div> : <div className="sae-image-placeholder">Pas d'image</div>}
+                  <div className="sae-glass-card clickable-card" key={sae.id}>
+                    {sae.image ? <div className="sae-image-container" style={{backgroundImage: `url(${API_URL}${sae.image})`}}></div> : <div className="sae-image-placeholder">No Image</div>}
                     <div className="sae-card-content">
                       <span className="sae-ressource-badge">{sae.ressource}</span>
                       <h3 className="sae-title">{sae.titre}</h3>
                       <p className="sae-desc">{sae.description}</p>
-                      <div className="sae-footer">
-                        <div className="sae-date">📅 À rendre le : {formatDate(sae.date_rendu)}</div>
-                        <span className="btn-download-pdf">Ouvrir pour Rendre →</span>
-                      </div>
+                      <button 
+                        className="btn-voir-projet" 
+                        style={{width:'100%', padding:'10px', marginTop:'15px', borderRadius:'12px', background:'#4facfe', color:'#fff', border:'none', cursor:'pointer'}}
+                        onClick={() => { setSelectedSae(sae); setActiveTab('sae'); }}
+                      >
+                        Voir le projet
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -237,14 +236,11 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                   <div className="sae-grid">
                     {saesEnCours.map(sae => (
                       <div className="sae-glass-card clickable-card" key={sae.id} onClick={() => setSelectedSae(sae)}>
-                        {sae.image ? <div className="sae-image-container" style={{backgroundImage: `url(${API_URL}${sae.image})`}}></div> : <div className="sae-image-placeholder">Pas d'image</div>}
+                        {sae.image ? <div className="sae-image-container" style={{backgroundImage: `url(${API_URL}${sae.image})`}}></div> : <div className="sae-image-placeholder">No Image</div>}
                         <div className="sae-card-content">
                           <span className="sae-ressource-badge" style={{background: '#ffcc00', color: 'black'}}>En cours</span>
                           <h3 className="sae-title">{sae.titre}</h3>
-                          <div className="sae-footer">
-                            <div className="sae-date">⏳ {getTimeRemaining(sae.date_rendu, submissions[sae.id])}</div>
-                            <span className="btn-blue-outline" style={{textAlign:'center', padding:'8px', display:'block', marginTop:'10px'}}>Déposer le fichier</span>
-                          </div>
+                          <div className="sae-date">⏳ {getTimeRemaining(sae.date_rendu, submissions[sae.id])}</div>
                         </div>
                       </div>
                     ))}
@@ -283,7 +279,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
 
                        <div className="sub-actions" style={{marginTop: '20px'}}>
                         <label className="btn-blue-outline sub-btn" style={{cursor: 'pointer'}}>
-                          {tempFile ? `Fichier choisi : ${tempFile.name}` : (submissions[selectedSae.id] ? "Remplacer le fichier" : "Choisir un fichier")}
+                          {tempFile ? `Fichier prêt : ${tempFile.name}` : (submissions[selectedSae.id] ? "Remplacer le fichier" : "Choisir un fichier")}
                           <input type="file" style={{display: 'none'}} onChange={(e) => handleFileUpload(selectedSae.id, e)} />
                         </label>
                         
@@ -292,15 +288,13 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                              Valider le rendu
                            </button>
                         )}
-                        
-                        {submissions[selectedSae.id] && <button className="btn-red-outline sub-btn" onClick={() => handleDeleteSubmission(selectedSae.id)}>Supprimer mon rendu</button>}
                       </div>
                     </div>
 
                     <div className="status-table">
                       <div className="status-row"><span className="st-label">Statut</span><span className="st-value">{submissions[selectedSae.id] ? "✅ Travail remis" : "❌ Non remis"}</span></div>
-                      <div className="status-row"><span className="st-label">Temps restant</span><span className="st-value">{getTimeRemaining(selectedSae.date_rendu, submissions[selectedSae.id])}</span></div>
-                      <div className="status-row"><span className="st-label">Fichier enregistré</span><span className="st-value">{submissions[selectedSae.id]?.fileName ? submissions[selectedSae.id].fileName.split('/').pop() : "-"}</span></div>
+                      <div className="status-row"><span className="st-label">Note</span><span className="st-value" style={{fontWeight:'bold', color:'#ffcc00'}}>{submissions[selectedSae.id]?.note !== null ? `${submissions[selectedSae.id].note}/20` : "-"}</span></div>
+                      <div className="status-row"><span className="st-label">Fichier enregistré</span><span className="st-value">{submissions[selectedSae.id]?.fileName ? submissions[selectedSae.id].fileName.split('-').pop() : "-"}</span></div>
                     </div>
                   </div>
                 </>
