@@ -8,34 +8,100 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
   const [annonces, setAnnonces] = useState([]);
   const [showNotifs, setShowNotifs] = useState(false);
   
-  // Gère la SAE cliquée pour la vue détaillée
   const [selectedSae, setSelectedSae] = useState(null); 
-  
   const [filterMatiere, setFilterMatiere] = useState('TOUTES');
   const [passwords, setPasswords] = useState({ newPass: '', confirmPass: '' });
+  
+  // États pour le rendu
   const [submissions, setSubmissions] = useState({});
+  const [renderLink, setRenderLink] = useState("");
+  const [tempFile, setTempFile] = useState(null); // <--- AJOUTÉ : Pour stocker le fichier avant validation
 
   const token = localStorage.getItem('token');
 
+  // --- RÉCUPÉRATION DES DONNÉES ---
   const fetchAnnonces = useCallback(() => {
     fetch(`${API_URL}/api/annonces`, { headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => res.json()).then(data => setAnnonces(Array.isArray(data) ? data : []));
+    .then(res => res.json()).then(data => setAnnonces(Array.isArray(data) ? data : []))
+    .catch(err => console.error("Erreur annonces:", err));
   }, [API_URL, token]);
 
   const fetchSaes = useCallback(() => {
     fetch(`${API_URL}/api/saes/publiques`, { headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => res.json()).then(data => setSaes(Array.isArray(data) ? data : []));
+    .then(res => res.json()).then(data => setSaes(Array.isArray(data) ? data : []))
+    .catch(err => console.error("Erreur SAE:", err));
+  }, [API_URL, token]);
+
+  const fetchMySubmissions = useCallback(() => {
+    fetch(`${API_URL}/api/etudiant/mes-rendus`, { headers: { 'Authorization': `Bearer ${token}` } })
+    .then(res => res.json())
+    .then(data => {
+      const subsMap = {};
+      if (Array.isArray(data)) {
+        data.forEach(sub => {
+          subsMap[sub.sae_id] = { 
+            fileName: sub.fichier_rendu, 
+            link: sub.lien_rendu, 
+            date: sub.date_depot, 
+            status: 'Remis pour évaluation' 
+          };
+        });
+      }
+      setSubmissions(subsMap);
+    }).catch(err => console.error("Erreur rendus:", err));
   }, [API_URL, token]);
 
   useEffect(() => {
     fetchAnnonces();
     fetchSaes();
-  }, [fetchAnnonces, fetchSaes]);
+    fetchMySubmissions();
+  }, [fetchAnnonces, fetchSaes, fetchMySubmissions]);
 
-  // Réinitialiser la vue détaillée si on change d'onglet
+  // --- LOGIQUE DE RENDU CORRIGÉE ---
+  const handleFileUpload = (saeId, e) => {
+    // CAS 1 : L'utilisateur vient de choisir un fichier via l'input
+    if (e && e.target && e.target.files) {
+      setTempFile(e.target.files[0]);
+      return; 
+    }
+
+    // CAS 2 : On a cliqué sur "Valider le rendu" (e n'a pas de files ici)
+    if (!tempFile && !renderLink) {
+      alert("Veuillez choisir un fichier ou ajouter un lien !");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('sae_id', saeId);
+    if (tempFile) formData.append('devoir', tempFile); // 'devoir' matchera ton server.js
+    formData.append('lien', renderLink);
+
+    fetch(`${API_URL}/api/etudiant/rendre`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      setRenderLink("");
+      setTempFile(null); // On vide le fichier temporaire
+      fetchMySubmissions(); 
+    })
+    .catch(err => alert("Erreur lors de l'envoi"));
+  };
+
+  const handleDeleteSubmission = (saeId) => {
+    if(window.confirm("Êtes-vous sûr de vouloir supprimer votre travail ?")) {
+       setSubmissions(prev => { const newSubs = {...prev}; delete newSubs[saeId]; return newSubs; });
+    }
+  };
+
+  // --- UTILITAIRES ---
   const changeTab = (tab) => {
     setActiveTab(tab);
     setSelectedSae(null);
+    setTempFile(null); // Reset fichier quand on change d'onglet
   };
 
   const matieres = ['TOUTES', ...new Set(saes.map(s => s.ressource).filter(Boolean))];
@@ -49,7 +115,6 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
   const getSaeStatus = (dateRendu) => {
     if (!dateRendu) return { label: "En cours", color: "yellow" };
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
     const limitDate = new Date(dateRendu);
     if (limitDate < today) return { label: "En retard", color: "red" };
     return { label: "En cours", color: "yellow" };
@@ -76,34 +141,11 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
     });
   };
 
-  const handleFileUpload = (saeId, e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('rendu', file);
-    
-    fetch(`${API_URL}/api/student/submit/${saeId}`, {
-      method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-      alert(data.message);
-      setSubmissions(prev => ({ ...prev, [saeId]: { fileName: file.name, date: new Date(), status: 'Remis pour évaluation' } }));
-    });
-  };
-
-  const handleDeleteSubmission = (saeId) => {
-    if(window.confirm("Êtes-vous sûr de vouloir supprimer votre travail ?")) {
-      setSubmissions(prev => { const newSubs = {...prev}; delete newSubs[saeId]; return newSubs; });
-    }
-  };
-
   const filteredCatalogue = filterMatiere === 'TOUTES' ? saes : saes.filter(s => s.ressource === filterMatiere);
   const saesEnCours = saes.filter(s => getSaeStatus(s.date_rendu).color === 'yellow');
 
   return (
     <div className="student-blue-layout">
-      
       <header className="pill-header">
         <nav className="header-nav-white">
           <div className="header-logo-text" style={{marginRight: '20px'}}>ECAMPUS</div>
@@ -135,14 +177,6 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                         </div>
                       )
                     })}
-                    <h4 className="notif-section-title" style={{marginTop: '20px'}}>Annonces</h4>
-                    {annonces.map(a => (
-                      <div key={`annonce-${a.id}`} className="notif-item annonce-style">
-                        <div className="notif-header"><strong>📢 {a.titre}</strong></div>
-                        <p className="annonce-desc">{a.contenu}</p>
-                        <div className="notif-footer"><span className="notif-time">{formatDate(a.date_creation)}</span></div>
-                      </div>
-                    ))}
                   </div>
                 </motion.div>
               )}
@@ -150,7 +184,6 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
           </div>
 
           <div className="user-profile-pill">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             <div className="user-info-text">
               <span className="role-bold">{user.email}</span>
               <button onClick={onLogout}>DÉCONNEXION</button>
@@ -162,7 +195,6 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
       <main className="student-content-centered">
         <AnimatePresence mode="wait">
           
-          {/* ONGLET 1 : CATALOGUE COMPLET AVEC FILTRES */}
           {activeTab === 'catalogue' && (
             <motion.div key="cat" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="tab-container">
               <div className="title-row">
@@ -179,86 +211,96 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
               </div>
 
               <div className="sae-grid">
-                {filteredCatalogue.length === 0 ? <p className="no-data-text">Aucune SAE pour cette matière.</p> : 
-                  filteredCatalogue.map(sae => (
-                    <div className="sae-glass-card clickable-card" key={sae.id} onClick={() => { changeTab('sae'); setSelectedSae(sae); }}>
-                      {sae.image ? <div className="sae-image-container" style={{backgroundImage: `url(${API_URL}${sae.image})`}}></div> : <div className="sae-image-placeholder">Pas d'image</div>}
-                      <div className="sae-card-content">
-                        <span className="sae-ressource-badge">{sae.ressource}</span>
-                        <h3 className="sae-title">{sae.titre}</h3>
-                        <p className="sae-desc">{sae.description}</p>
-                        <div className="sae-footer">
-                          <div className="sae-date">📅 À rendre le : {formatDate(sae.date_rendu)}</div>
-                          <span className="btn-download-pdf">Ouvrir pour Rendre →</span>
-                        </div>
+                {filteredCatalogue.map(sae => (
+                  <div className="sae-glass-card clickable-card" key={sae.id} onClick={() => { changeTab('sae'); setSelectedSae(sae); }}>
+                    {sae.image ? <div className="sae-image-container" style={{backgroundImage: `url(${API_URL}${sae.image})`}}></div> : <div className="sae-image-placeholder">Pas d'image</div>}
+                    <div className="sae-card-content">
+                      <span className="sae-ressource-badge">{sae.ressource}</span>
+                      <h3 className="sae-title">{sae.titre}</h3>
+                      <p className="sae-desc">{sae.description}</p>
+                      <div className="sae-footer">
+                        <div className="sae-date">📅 À rendre le : {formatDate(sae.date_rendu)}</div>
+                        <span className="btn-download-pdf">Ouvrir pour Rendre →</span>
                       </div>
                     </div>
-                  ))
-                }
+                  </div>
+                ))}
               </div>
             </motion.div>
           )}
 
-          {/* ONGLET 2 : SAE (EN COURS) - GRILLE OU VUE DÉTAILLÉE */}
           {activeTab === 'sae' && (
             <motion.div key="sae" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="tab-container">
-              
               {!selectedSae ? (
-                /* --- VUE GRILLE --- */
                 <>
                   <h1 className="white-title-large">Mes SAE en cours</h1>
-                  <p className="white-subtitle">Cliquez sur une SAE pour déposer votre travail.</p>
                   <div className="sae-grid">
-                    {saesEnCours.length === 0 ? <p className="no-data-text">Vous n'avez aucune SAE en cours.</p> : 
-                      saesEnCours.map(sae => (
-                        <div className="sae-glass-card clickable-card" key={sae.id} onClick={() => setSelectedSae(sae)}>
-                          {sae.image ? <div className="sae-image-container" style={{backgroundImage: `url(${API_URL}${sae.image})`}}></div> : <div className="sae-image-placeholder">Pas d'image</div>}
-                          <div className="sae-card-content">
-                            <span className="sae-ressource-badge" style={{background: '#ffcc00', color: 'black'}}>En cours</span>
-                            <h3 className="sae-title">{sae.titre}</h3>
-                            <div className="sae-footer">
-                              <div className="sae-date">⏳ {getTimeRemaining(sae.date_rendu, submissions[sae.id])}</div>
-                              <span className="btn-blue-outline" style={{textAlign:'center', padding:'8px', display:'block', marginTop:'10px'}}>Déposer le fichier</span>
-                            </div>
+                    {saesEnCours.map(sae => (
+                      <div className="sae-glass-card clickable-card" key={sae.id} onClick={() => setSelectedSae(sae)}>
+                        {sae.image ? <div className="sae-image-container" style={{backgroundImage: `url(${API_URL}${sae.image})`}}></div> : <div className="sae-image-placeholder">Pas d'image</div>}
+                        <div className="sae-card-content">
+                          <span className="sae-ressource-badge" style={{background: '#ffcc00', color: 'black'}}>En cours</span>
+                          <h3 className="sae-title">{sae.titre}</h3>
+                          <div className="sae-footer">
+                            <div className="sae-date">⏳ {getTimeRemaining(sae.date_rendu, submissions[sae.id])}</div>
+                            <span className="btn-blue-outline" style={{textAlign:'center', padding:'8px', display:'block', marginTop:'10px'}}>Déposer le fichier</span>
                           </div>
                         </div>
-                      ))
-                    }
+                      </div>
+                    ))}
                   </div>
                 </>
               ) : (
-                /* --- VUE DÉTAILLÉE DU RENDU --- */
                 <>
                   <button className="btn-back" onClick={() => setSelectedSae(null)}>← Retour à la liste</button>
                   <div className="submission-glass-card">
                     <div className="sub-header">
                       <div>
-                        <h2 className="sub-title">ÉTUDIANTE</h2>
-                        <h3 className="sub-sae-name">Rendu {selectedSae.ressource} - {selectedSae.titre}</h3>
+                        <h2 className="sub-title">ESPACE DE RENDU</h2>
+                        <h3 className="sub-sae-name">{selectedSae.ressource} - {selectedSae.titre}</h3>
                       </div>
                       <div className="sub-dates-right">
-                        <p>A rendre le : <strong>{formatDate(selectedSae.date_rendu, true)}</strong></p>
+                        <p>Limite : <strong>{formatDate(selectedSae.date_rendu, true)}</strong></p>
                       </div>
                     </div>
                     
                     <div className="sub-desc">
                       <p>{selectedSae.description}</p>
-                      {selectedSae.pdf_link && <a href={`${API_URL}${selectedSae.pdf_link}`} target="_blank" rel="noreferrer" style={{color: '#00f2fe', textDecoration: 'underline'}}>Voir le sujet détaillé (PDF)</a>}
+                      {selectedSae.pdf_link && <a href={`${API_URL}${selectedSae.pdf_link}`} target="_blank" rel="noreferrer" style={{color: '#00f2fe', textDecoration: 'underline'}}>Sujet complet (PDF)</a>}
                     </div>
 
-                    <div className="sub-actions">
-                      <label className="btn-blue-outline sub-btn">
-                        {submissions[selectedSae.id] ? "Modifier le travail" : "Déposer un travail"}
-                        <input type="file" style={{display: 'none'}} onChange={(e) => handleFileUpload(selectedSae.id, e)} />
-                      </label>
-                      {submissions[selectedSae.id] && <button className="btn-red-outline sub-btn" onClick={() => handleDeleteSubmission(selectedSae.id)}>Supprimer travail remis</button>}
+                    <div className="render-inputs-zone">
+                       <div className="input-group-blue">
+                          <label>Lien externe (GitHub, Portfolio...) :</label>
+                          <input 
+                            type="text" 
+                            placeholder="https://..." 
+                            value={renderLink}
+                            onChange={(e) => setRenderLink(e.target.value)}
+                            className="glass-input-text"
+                          />
+                       </div>
+
+                       <div className="sub-actions" style={{marginTop: '20px'}}>
+                        <label className="btn-blue-outline sub-btn" style={{cursor: 'pointer'}}>
+                          {tempFile ? `Fichier choisi : ${tempFile.name}` : (submissions[selectedSae.id] ? "Remplacer le fichier" : "Choisir un fichier")}
+                          <input type="file" style={{display: 'none'}} onChange={(e) => handleFileUpload(selectedSae.id, e)} />
+                        </label>
+                        
+                        {(renderLink || tempFile) && (
+                           <button className="btn-blue-outline sub-btn" style={{background: '#fff', color: '#4facfe'}} onClick={() => handleFileUpload(selectedSae.id)}>
+                             Valider le rendu
+                           </button>
+                        )}
+                        
+                        {submissions[selectedSae.id] && <button className="btn-red-outline sub-btn" onClick={() => handleDeleteSubmission(selectedSae.id)}>Supprimer mon rendu</button>}
+                      </div>
                     </div>
 
                     <div className="status-table">
-                      <div className="status-row"><span className="st-label">Statut de remise</span><span className="st-value">{submissions[selectedSae.id] ? submissions[selectedSae.id].status : "Aucun travail remis"}</span></div>
+                      <div className="status-row"><span className="st-label">Statut</span><span className="st-value">{submissions[selectedSae.id] ? "✅ Travail remis" : "❌ Non remis"}</span></div>
                       <div className="status-row"><span className="st-label">Temps restant</span><span className="st-value">{getTimeRemaining(selectedSae.date_rendu, submissions[selectedSae.id])}</span></div>
-                      <div className="status-row"><span className="st-label">Dernière modification</span><span className="st-value">{submissions[selectedSae.id] ? formatDate(submissions[selectedSae.id].date, true) : "-"}</span></div>
-                      <div className="status-row"><span className="st-label">Remises de fichiers</span><span className="st-value" style={{fontWeight: 'bold'}}>{submissions[selectedSae.id] ? submissions[selectedSae.id].fileName : "-"}</span></div>
+                      <div className="status-row"><span className="st-label">Fichier enregistré</span><span className="st-value">{submissions[selectedSae.id]?.fileName ? submissions[selectedSae.id].fileName.split('/').pop() : "-"}</span></div>
                     </div>
                   </div>
                 </>
@@ -266,14 +308,11 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
             </motion.div>
           )}
 
-          {/* ONGLET 3 : PROFIL */}
           {activeTab === 'profil' && (
             <motion.div key="prof" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="tab-container">
               <h1 className="white-title-large">Mon Profil</h1>
-              <p className="white-subtitle">Modifiez vos informations personnelles.</p>
-              
               <div className="sae-glass-card" style={{maxWidth: '500px', margin: '0 auto', padding: '40px'}}>
-                <h3 style={{marginTop: 0, fontSize: '1.5rem'}}>Changer mon mot de passe</h3>
+                <h3 style={{marginTop: 0, fontSize: '1.5rem'}}>Modifier mon mot de passe</h3>
                 <form onSubmit={handleUpdatePassword}>
                   <div className="input-group-blue" style={{marginBottom: '20px'}}>
                     <label>Nouveau mot de passe :</label>

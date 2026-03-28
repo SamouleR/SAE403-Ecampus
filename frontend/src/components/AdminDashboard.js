@@ -74,12 +74,32 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
   const handleCreateStudent = (e) => {
     e.preventDefault();
     fetch(`${API_URL}/api/admin/etudiants`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify(studentForm)
-    }).then(res => res.json()).then(data => { 
-      alert(data.message); setStudentForm({ email: '', password: '' }); fetchCatalogueData(); 
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify(studentForm)
+    })
+    .then(res => {
+        // On vérifie si la réponse est du JSON avant de parser
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            return res.json();
+        } else {
+            throw new Error("Le serveur n'a pas répondu en JSON (Erreur 500 ou 404)");
+        }
+    })
+    .then(data => { 
+        alert(data.message); 
+        setStudentForm({ email: '', password: '' }); 
+        fetchCatalogueData(); 
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Erreur critique : " + err.message);
     });
-  };
+};
 
   const handleEnrollStudent = (e) => {
     e.preventDefault();
