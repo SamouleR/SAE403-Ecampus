@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminDashboard from './components/AdminDashboard';
 import StudentDashboard from './components/StudentDashboard';
 import TeacherDashboard from './components/TeacherDashboard';
-import PublicLanding from './components/PublicLanding'; 
+import PublicLanding from './components/PublicLanding';
+import Register from './components/Register'; // Nouveau composant
 import './App.css';
 
 const API_URL = "https://api.samuelralaikoa.mmi-velizy.fr";
@@ -14,9 +15,10 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [showLogin, setShowLogin] = useState(false); 
-  const [roleIndex, setRoleIndex] = useState(1);
+  const [view, setView] = useState('public'); // Gère l'état : 'public', 'login', 'register'
+  const [roleIndex, setRoleIndex] = useState(0);
   const [credentials, setCredentials] = useState({ email: '', pass: '' });
+  const [isLoading, setIsLoading] = useState(true);
 
   const roles = [
     { label: "ÉTUDIANTE", id: "etudiant" },
@@ -24,6 +26,36 @@ export default function App() {
     { label: "ENSEIGNANTE", id: "professeur" } 
   ];
 
+  // --- COMPLEXIFICATION : VÉRIFICATION DE SESSION (Interaction BDD) ---
+  const checkSession = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      } else {
+        handleLogout();
+      }
+    } catch (err) {
+      console.error("Session expirée ou serveur injoignable");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
+
+  // --- ACTIONS ---
   const handleLogin = (e) => {
     e.preventDefault();
     fetch(`${API_URL}/api/login`, {
@@ -44,6 +76,7 @@ export default function App() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
+      setView('dashboard');
     })
     .catch((err) => alert(err.message));
   };
@@ -51,20 +84,16 @@ export default function App() {
   const handleLogout = () => {
     localStorage.clear();
     setUser(null);
-    setShowLogin(false);
+    setView('public');
   };
 
-  // --- LOGIQUE D'AFFICHAGE DES DASHBOARDS ---
+  if (isLoading) return <div className="loader-prof">Initialisation de SaeTrack...</div>;
+
+  // --- ROUTAGE DYNAMIQUE SELON LE RÔLE ---
   if (user) {
-    if (user.role === "admin") {
-      return <AdminDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
-    }
-    if (user.role === "etudiant") {
-      return <StudentDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
-    }
-    if (user.role === "professeur" || user.role === "enseignant") {
-      return <TeacherDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
-    }
+    if (user.role === "admin") return <AdminDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
+    if (user.role === "etudiant") return <StudentDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
+    if (user.role === "professeur" || user.role === "enseignant") return <TeacherDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
     
     return (
       <div className="login-blue-bg">
@@ -76,74 +105,63 @@ export default function App() {
     );
   }
 
-  // --- FORMULAIRE DE CONNEXION (CENTRÉ) ---
-  if (showLogin) {
-    return (
-      <div className="login-blue-bg">
-        <button className="back-to-public" onClick={() => setShowLogin(false)}>
-          ← Retour à l'accueil
-        </button>
-        
-        <div className="login-carousel-wrapper">
-          <button 
-            type="button" 
-            className="nav-btn-white" 
-            onClick={() => setRoleIndex((roleIndex - 1 + 3) % 3)}
-          >
-            [ précédent ]
-          </button>
+  return (
+    <AnimatePresence mode="wait">
+      {/* VUE : CATALOGUE PUBLIC */}
+      {view === 'public' && (
+        <motion.div key="public" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <PublicLanding onShowLogin={() => setView('login')} API_URL={API_URL} />
+        </motion.div>
+      )}
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={roleIndex}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3 }}
-            >
-              <form onSubmit={handleLogin} className="login-form-blue">
-                <h2 className="role-title-display">{roles[roleIndex].label}</h2>
-                
-                <div className="input-group-blue">
-                  <label>Email :</label>
-                  <input 
-                    type="email" 
-                    autoComplete="email"
-                    onChange={e => setCredentials({...credentials, email: e.target.value})} 
-                    required 
-                    placeholder="votre@email.fr"
-                  />
-                </div>
+      {/* VUE : FORMULAIRE DE CONNEXION CAROUSEL */}
+      {view === 'login' && (
+        <motion.div 
+          key="login" 
+          initial={{ x: 100, opacity: 0 }} 
+          animate={{ x: 0, opacity: 1 }} 
+          exit={{ x: -100, opacity: 0 }}
+          className="login-blue-bg"
+        >
+          <button className="back-to-public" onClick={() => setView('public')}>← Retour</button>
+          
+          <div className="login-carousel-wrapper">
+            <button type="button" className="nav-btn-white" onClick={() => setRoleIndex((roleIndex - 1 + 3) % 3)}> [ prréc ] </button>
 
-                <div className="input-group-blue">
-                  <label>Mot de passe :</label>
-                  <input 
-                    type="password" 
-                    autoComplete="current-password"
-                    onChange={e => setCredentials({...credentials, pass: e.target.value})} 
-                    required 
-                    placeholder="••••••••"
-                  />
-                </div>
+            <form onSubmit={handleLogin} className="login-form-blue">
+              <h2 className="role-title-display">{roles[roleIndex].label}</h2>
+              <div className="input-group-blue">
+                <label>Email :</label>
+                <input type="email" onChange={e => setCredentials({...credentials, email: e.target.value})} required placeholder="votre@email.fr" />
+              </div>
+              <div className="input-group-blue">
+                <label>Mot de passe :</label>
+                <input type="password" onChange={e => setCredentials({...credentials, pass: e.target.value})} required placeholder="••••••••" />
+              </div>
+              <button type="submit" className="btn-blue-outline">SE CONNECTER</button>
+              
+              <div className="auth-footer" style={{marginTop:'20px', color:'white', fontSize:'0.8rem'}}>
+                Pas encore de compte ? 
+                <button type="button" onClick={() => setView('register')} style={{background:'none', border:'none', color:'#00f2fe', cursor:'pointer', marginLeft:'5px', fontWeight:'bold'}}>S'inscrire</button>
+              </div>
+            </form>
 
-                <button type="submit" className="btn-blue-outline">
-                  SE CONNECTER
-                </button>
-              </form>
-            </motion.div>
-          </AnimatePresence>
+            <button type="button" className="nav-btn-white" onClick={() => setRoleIndex((roleIndex + 1) % 3)}> [ suiv ] </button>
+          </div>
+        </motion.div>
+      )}
 
-          <button 
-            type="button" 
-            className="nav-btn-white" 
-            onClick={() => setRoleIndex((roleIndex + 1) % 3)}
-          >
-            [ suivant ]
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return <PublicLanding onShowLogin={() => setShowLogin(true)} API_URL={API_URL} />;
+      {/* VUE : INSCRIPTION (Nouveau) */}
+      {view === 'register' && (
+        <motion.div 
+          key="register"
+          initial={{ x: 100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -100, opacity: 0 }}
+        >
+          <Register onShowLogin={() => setView('login')} API_URL={API_URL} />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 }

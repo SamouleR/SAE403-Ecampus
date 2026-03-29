@@ -239,3 +239,88 @@ body, html {
     gap: 20px;
   }
 }
+
+.stats-grid-pro {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 25px;
+  margin-top: 20px;
+}
+
+.progress-card-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  padding: 25px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.progress-track {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 10px;
+}
+
+.progress-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.btn-detail-small {
+  background: white;
+  color: #1e3a8a;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.btn-visibility {
+  border: none;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-visibility.visible { background: #34c759; color: white; }
+.btn-visibility.hidden { background: #ff3b30; color: white; }
+
+.is-hidden { opacity: 0.6; filter: grayscale(0.5); }
+
+.hidden-overlay {
+  background: rgba(255, 59, 48, 0.8);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  letter-spacing: 2px;
+}

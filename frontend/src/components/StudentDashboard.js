@@ -22,15 +22,18 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
   const token = localStorage.getItem('token');
 
   // --- RÉCUPÉRATION DES DONNÉES ---
+  
   const fetchAnnonces = useCallback(() => {
     fetch(`${API_URL}/api/annonces`, { headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => res.json()).then(data => setAnnonces(Array.isArray(data) ? data : []))
+    .then(res => res.json())
+    .then(data => setAnnonces(Array.isArray(data) ? data : []))
     .catch(err => console.error("Erreur annonces:", err));
   }, [API_URL, token]);
 
   const fetchSaes = useCallback(() => {
     fetch(`${API_URL}/api/saes/publiques`, { headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => res.json()).then(data => setSaes(Array.isArray(data) ? data : []))
+    .then(res => res.json())
+    .then(data => setSaes(Array.isArray(data) ? data : []))
     .catch(err => console.error("Erreur SAE:", err));
   }, [API_URL, token]);
 
@@ -46,7 +49,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
             link: sub.lien_rendu, 
             date: sub.date_depot, 
             status: 'Remis pour évaluation',
-            note: sub.note // Récupération de la note si elle existe
+            note: sub.note 
           };
         });
       }
@@ -60,15 +63,13 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
     fetchMySubmissions();
   }, [fetchAnnonces, fetchSaes, fetchMySubmissions]);
 
-  // --- LOGIQUE DE RENDU CORRIGÉE ---
+  // --- LOGIQUE DE RENDU ---
   const handleFileUpload = (saeId, e) => {
-    // CAS 1 : Sélection d'un fichier (via input)
     if (e && e.target && e.target.files) {
       setTempFile(e.target.files[0]);
       return; 
     }
 
-    // CAS 2 : Clic sur le bouton "Valider le rendu"
     if (!tempFile && !renderLink) {
       alert("Veuillez choisir un fichier ou ajouter un lien !");
       return;
@@ -86,18 +87,12 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
     })
     .then(res => res.json())
     .then(data => {
-      alert(data.message);
+      alert(data.message || "Travail envoyé avec succès !");
       setRenderLink("");
       setTempFile(null); 
       fetchMySubmissions(); 
     })
     .catch(err => alert("Erreur lors de l'envoi"));
-  };
-
-  const handleDeleteSubmission = (saeId) => {
-    if(window.confirm("Êtes-vous sûr de vouloir supprimer votre travail ?")) {
-       setSubmissions(prev => { const newSubs = {...prev}; delete newSubs[saeId]; return newSubs; });
-    }
   };
 
   // --- UTILITAIRES ---
@@ -111,16 +106,24 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
 
   const formatDate = (dateString, withTime = false) => {
     if (!dateString) return "Non définie";
-    const options = { year: 'numeric', month: 'long', day: 'numeric', ...(withTime && { hour: '2-digit', minute: '2-digit' }) };
+    const options = { 
+        year: 'numeric', month: 'long', day: 'numeric', 
+        ...(withTime && { hour: '2-digit', minute: '2-digit' }) 
+    };
     return new Date(dateString).toLocaleDateString('fr-FR', options);
   };
 
-  const getSaeStatus = (dateRendu) => {
-    if (!dateRendu) return { label: "En cours", color: "yellow" };
+  const getSaeStatus = (dateRendu, isSubmitted) => {
+    if (isSubmitted) return { label: "Terminé", color: "green", urgency: 0 };
+    if (!dateRendu) return { label: "À venir", color: "gray", urgency: 0 };
+
     const today = new Date();
     const limitDate = new Date(dateRendu);
-    if (limitDate < today) return { label: "En retard", color: "red" };
-    return { label: "En cours", color: "yellow" };
+    const diffHours = (limitDate - today) / (1000 * 60 * 60);
+
+    if (diffHours < 0) return { label: "En retard", color: "red", urgency: 3 };
+    if (diffHours <= 48) return { label: "URGENT", color: "orange", urgency: 2 }; 
+    return { label: "En cours", color: "blue", urgency: 1 };
   };
 
   const getTimeRemaining = (dateRendu, sub) => {
@@ -138,15 +141,16 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
     e.preventDefault();
     if (passwords.newPass !== passwords.confirmPass) return alert("Les mots de passe ne correspondent pas !");
     fetch(`${API_URL}/api/student/password`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ newPassword: passwords.newPass })
+      method: 'PUT', 
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+      body: JSON.stringify({ newPassword: passwords.newPass })
     }).then(res => res.json()).then(data => {
       alert(data.message); setPasswords({ newPass: '', confirmPass: '' });
     });
   };
 
   const filteredCatalogue = filterMatiere === 'TOUTES' ? saes : saes.filter(s => s.ressource === filterMatiere);
-  const saesEnCours = saes.filter(s => getSaeStatus(s.date_rendu).color === 'yellow');
-
+ 
   return (
     <div className="student-blue-layout">
       <header className="pill-header">
@@ -164,21 +168,13 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
               {showNotifs && (
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="notifs-panel">
                   <div className="notifs-scroll-area">
-                    <h4 className="notif-section-title">Suivi des rendus</h4>
-                    {saes.map(sae => {
-                      const status = submissions[sae.id] ? {label: "Rendu", color: "green"} : getSaeStatus(sae.date_rendu);
-                      return (
-                        <div className="notif-item" key={`suivi-${sae.id}`} onClick={() => {changeTab('sae'); setSelectedSae(sae); setShowNotifs(false);}}>
-                          <div className="notif-header">
-                            <div className="status-indicator">
-                              <span className={`status-square ${status.color}`}></span>
-                              <strong>{status.label}: {sae.titre}</strong>
-                            </div>
-                          </div>
-                          <div className="notif-footer"><span className="notif-time">Limite : {formatDate(sae.date_rendu)}</span></div>
+                    <h4 className="notif-section-title">Dernières Annonces</h4>
+                    {annonces.length > 0 ? annonces.map(annonce => (
+                        <div className="notif-item" key={annonce.id}>
+                            <strong>{annonce.titre}</strong>
+                            <p>{annonce.contenu}</p>
                         </div>
-                      )
-                    })}
+                    )) : <p className="no-notif">Aucune annonce.</p>}
                   </div>
                 </motion.div>
               )}
@@ -234,16 +230,30 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                 <>
                   <h1 className="white-title-large">Mes SAE en cours</h1>
                   <div className="sae-grid">
-                    {saesEnCours.map(sae => (
-                      <div className="sae-glass-card clickable-card" key={sae.id} onClick={() => setSelectedSae(sae)}>
-                        {sae.image ? <div className="sae-image-container" style={{backgroundImage: `url(${API_URL}${sae.image})`}}></div> : <div className="sae-image-placeholder">No Image</div>}
-                        <div className="sae-card-content">
-                          <span className="sae-ressource-badge" style={{background: '#ffcc00', color: 'black'}}>En cours</span>
-                          <h3 className="sae-title">{sae.titre}</h3>
-                          <div className="sae-date">⏳ {getTimeRemaining(sae.date_rendu, submissions[sae.id])}</div>
+                    {saes.filter(s => !submissions[s.id]).map(sae => {
+                      const status = getSaeStatus(sae.date_rendu, false);
+                      return (
+                        <div className={`sae-glass-card clickable-card ${status.label === 'URGENT' ? 'urgent-pulse' : ''}`} key={sae.id} onClick={() => setSelectedSae(sae)}>
+                            <div className="sae-card-badge-container">
+                                <span className={`status-badge ${status.color}`}>{status.label}</span>
+                            </div>
+                            {sae.image && <div className="sae-image-container" style={{backgroundImage: `url(${API_URL}${sae.image})`}}></div>}
+                            <div className="sae-card-content">
+                                <h3 className="sae-title">{sae.titre}</h3>
+                                <div className="deadline-timer">
+                                    {status.label === 'URGENT' ? (
+                                        <span className="text-orange">⚠️ Dépôt imminent !</span>
+                                    ) : (
+                                        <span>⏳ {getTimeRemaining(sae.date_rendu, null)}</span>
+                                    )}
+                                </div>
+                                <div className="mini-progress-bar">
+                                    <div className="fill" style={{ width: '10%' }}></div>
+                                </div>
+                            </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </>
               ) : (
@@ -293,7 +303,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
 
                     <div className="status-table">
                       <div className="status-row"><span className="st-label">Statut</span><span className="st-value">{submissions[selectedSae.id] ? "✅ Travail remis" : "❌ Non remis"}</span></div>
-                      <div className="status-row"><span className="st-label">Note</span><span className="st-value" style={{fontWeight:'bold', color:'#ffcc00'}}>{submissions[selectedSae.id]?.note !== null ? `${submissions[selectedSae.id].note}/20` : "-"}</span></div>
+                      <div className="status-row"><span className="st-label">Note</span><span className="st-value" style={{fontWeight:'bold', color:'#ffcc00'}}>{submissions[selectedSae.id]?.note !== null && submissions[selectedSae.id]?.note !== undefined ? `${submissions[selectedSae.id].note}/20` : "-"}</span></div>
                       <div className="status-row"><span className="st-label">Fichier enregistré</span><span className="st-value">{submissions[selectedSae.id]?.fileName ? submissions[selectedSae.id].fileName.split('-').pop() : "-"}</span></div>
                     </div>
                   </div>

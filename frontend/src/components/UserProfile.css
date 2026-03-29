@@ -1,0 +1,109 @@
+/* --- CONTAINER ET GRILLE --- */
+.profile-container-pro {
+  padding: 0 40px;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 30px;
+  align-items: start;
+}
+
+/* --- CARTES GLASSMORPHISM (Comme l'image) --- */
+.profile-card-glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 40px;
+  color: white;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+/* --- HEADER PROFIL --- */
+.profile-header-main {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 30px;
+}
+
+.avatar-circle-large {
+  width: 90px;
+  height: 90px;
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: white;
+  border: 4px solid white;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.profile-title-block h2 { font-size: 1.8rem; font-weight: 900; margin: 8px 0 3px 0; letter-spacing: 1px; }
+.profile-email-sub { opacity: 0.8; font-size: 0.95rem; margin: 0; }
+
+.profile-role-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: white;
+}
+
+/* --- META DATA --- */
+.profile-meta-data {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 15px 20px;
+  border-radius: 12px;
+}
+
+.meta-item { display: flex; flex-direction: column; gap: 4px; }
+.meta-item span { font-size: 0.75rem; opacity: 0.7; font-weight: 600; text-transform: uppercase; }
+.meta-item strong { font-size: 1rem; font-weight: 800; }
+
+/* --- BIO --- */
+.profile-bio label { font-weight: 700; font-size: 0.9rem; color: #4facfe; margin-bottom: 8px; display: block; }
+.profile-bio p { font-size: 0.95rem; line-height: 1.5; opacity: 0.9; margin-bottom: 30px; }
+.profile-bio textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  padding: 10px;
+  margin-bottom: 25px;
+}
+
+/* --- BOUTONS OUTLINES (Comme l'image) --- */
+.profile-actions-bottom { display: flex; gap: 15px; }
+.logout-btn { border-color: #ff3b30 !important; color: #ff3b30 !important; }
+.logout-btn:hover { background: #ff3b30 !important; color: white !important; }
+
+/* --- SÉCURITÉ FORM --- */
+.section-title-white { font-size: 1.4rem; font-weight: 800; margin: 0 0 30px 0; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 15px;}
+.input-group-pro { margin-bottom: 20px; }
+.input-group-pro label { font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.8); margin-bottom: 8px; display: block;}
+.input-group-pro input {
+  width: 100%;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+}
+.input-group-pro input:focus { border-color: white; background: rgba(255,255,255,0.1); outline: none;}
+
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.submit-btn-pro { width: 100%; margin-top: 15px; }

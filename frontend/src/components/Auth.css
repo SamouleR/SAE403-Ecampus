@@ -1,0 +1,60 @@
+.auth-container {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top left, #4facfe, #00f2fe);
+}
+
+.glass-auth-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  padding: 50px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.auth-title { font-size: 2rem; font-weight: 900; color: white; margin-bottom: 5px; }
+.blue-text { color: #1e3a8a; }
+.auth-subtitle { color: rgba(255, 255, 255, 0.8); margin-bottom: 30px; }
+
+.input-group-glass { text-align: left; margin-bottom: 20px; }
+.input-group-glass label { color: white; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; display: block; }
+
+.input-group-glass input {
+  width: 100%;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  outline: none;
+  transition: 0.3s;
+}
+
+.input-group-glass input:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: white;
+}
+
+.btn-auth-submit {
+  width: 100%;
+  padding: 15px;
+  background: white;
+  color: #4facfe;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.3s;
+}
+
+.btn-auth-submit:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+.auth-footer { margin-top: 25px; color: white; font-size: 0.9rem; }
+.btn-link { background: none; border: none; color: #1e3a8a; font-weight: 800; cursor: pointer; margin-left: 10px; }

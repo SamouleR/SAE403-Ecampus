@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import UserProfile from './UserProfile'; // Importation du nouveau composant
 import './AdminDashboard.css';
 
 export default function AdminDashboard({ user, onLogout, API_URL }) {
@@ -11,7 +12,6 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
   const [studentForm, setStudentForm] = useState({ email: '', password: '' });
   const [enrollForm, setEnrollForm] = useState({ email: '', ressource: '' });
   
-  const [pendingSaes, setPendingSaes] = useState([]);
   const [allSaes, setAllSaes] = useState([]); // NOUVEAU : Toutes les SAEs
   const [pendingUsers, setPendingUsers] = useState([]);
   const [students, setStudents] = useState([]);
@@ -25,9 +25,6 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
   }, [API_URL, token]);
 
   const fetchCatalogueData = useCallback(() => {
-    fetch(`${API_URL}/api/admin/pending-saes`, { headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => res.json()).then(data => setPendingSaes(Array.isArray(data) ? data : []));
-    
     // Fetch Toutes les SAEs
     fetch(`${API_URL}/api/admin/all-saes`, { headers: { 'Authorization': `Bearer ${token}` } })
     .then(res => res.json()).then(data => setAllSaes(Array.isArray(data) ? data : []));
@@ -46,10 +43,8 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     }
   }, [activeTab, fetchAnnonces, fetchCatalogueData]);
 
-  // MODIFIÉ : Envoi de fichiers via FormData
   const handleCreateSAE = (e) => {
     e.preventDefault();
-    
     const formData = new FormData();
     formData.append('titre', saeForm.titre);
     formData.append('ressource', saeForm.ressource);
@@ -60,7 +55,7 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
 
     fetch(`${API_URL}/api/admin/saes`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }, // Attention: PAS de Content-Type ici avec FormData !
+      headers: { 'Authorization': `Bearer ${token}` },
       body: formData
     })
     .then(res => res.json())
@@ -82,7 +77,6 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
         body: JSON.stringify(studentForm)
     })
     .then(res => {
-        // On vérifie si la réponse est du JSON avant de parser
         const contentType = res.headers.get("content-type");
         if (contentType && contentType.indexOf("application/json") !== -1) {
             return res.json();
@@ -99,7 +93,7 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
         console.error(err);
         alert("Erreur critique : " + err.message);
     });
-};
+  };
 
   const handleEnrollStudent = (e) => {
     e.preventDefault();
@@ -107,11 +101,6 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify(enrollForm)
     }).then(res => res.json()).then(data => { alert(data.message); setEnrollForm({ email: '', ressource: '' }); });
-  };
-
-  const handleValidateSae = (id) => {
-    fetch(`${API_URL}/api/admin/saes/${id}/validate`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => res.json()).then(data => { alert(data.message); fetchCatalogueData(); });
   };
 
   const handleValidateUser = (id) => {
@@ -136,6 +125,7 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
           <button className={activeTab === 'catalogue' ? 'active' : ''} onClick={() => setActiveTab('catalogue')}>Catalogue</button>
           <button className={activeTab === 'sae' ? 'active' : ''} onClick={() => setActiveTab('sae')}>SAE</button>
           <button className={activeTab === 'etudiant' ? 'active' : ''} onClick={() => setActiveTab('etudiant')}>Étudiant</button>
+          <button className={activeTab === 'profil' ? 'active' : ''} onClick={() => setActiveTab('profil')}>Profil</button>
         </nav>
         <div className="header-actions">
           
@@ -172,8 +162,6 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
           {/* CATALOGUE */}
           {activeTab === 'catalogue' && (
             <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="tab-container">
-              
-              {/* NOUVEAU : LISTE DE TOUTES LES SAEs */}
               <h2 className="black-title">Tous les projets SAE</h2>
               <div className="glass-card" style={{marginBottom: '40px'}}>
                 <div className="table-header-white"><span>Projet</span><span>Statut</span><span>Ressources</span></div>
@@ -190,7 +178,6 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
                 {allSaes.length === 0 && <p style={{marginTop:'15px'}}>Aucune SAE trouvée dans la BDD.</p>}
               </div>
 
-              {/* ... (Garde tes autres listes pendingUsers, students ici) ... */}
               <h2 className="black-title">Inscriptions (En attente)</h2>
               <div className="glass-card" style={{marginBottom: '40px'}}>
                 <div className="table-header-white"><span>Email</span><span>Rôle</span><span>Action</span></div>
@@ -217,7 +204,6 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
                   </div>
                 ))}
               </div>
-
             </motion.div>
           )}
 
@@ -230,23 +216,17 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
                   <div className="col-left">
                     <div className="input-group-blue"><label>Titre de la SAE</label><input type="text" value={saeForm.titre} onChange={e => setSaeForm({...saeForm, titre: e.target.value})} required /></div>
                     <div className="input-group-blue"><label>Ressource concerné</label><input type="text" value={saeForm.ressource} onChange={e => setSaeForm({...saeForm, ressource: e.target.value})} required/></div>
-                    
-                    {/* INPUT FICHIER : IMAGE */}
                     <div className="input-group-blue file-input">
                       <label>Image source</label>
                       <input type="file" accept="image/*" onChange={e => setSaeForm({...saeForm, imageFile: e.target.files[0]})} />
                     </div>
-                    
                     <div className="input-group-blue"><label>Date de rendu :</label><input type="date" value={saeForm.date} onChange={e => setSaeForm({...saeForm, date: e.target.value})} required /></div>
                   </div>
                   <div className="col-right">
-                    
-                    {/* INPUT FICHIER : PDF */}
                     <div className="input-group-blue file-input">
                       <label>Ressources PDF</label>
                       <input type="file" accept="application/pdf" onChange={e => setSaeForm({...saeForm, pdfFile: e.target.files[0]})} />
                     </div>
-
                     <div className="input-group-blue"><label>Descriptions techniques</label><textarea rows="6" value={saeForm.desc} onChange={e => setSaeForm({...saeForm, desc: e.target.value})} required></textarea></div>
                     <button type="submit" className="btn-blue-outline centered-btn">Créer une SAE</button>
                   </div>
@@ -255,7 +235,7 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
             </motion.div>
           )}
 
-          {/* ÉTUDIANTS */}
+          {/* ÉTUDIANTS (Gestion Administrative) */}
           {activeTab === 'etudiant' && (
             <motion.div key="etu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="tab-container cards-row">
               <div className="glass-card small-card">
@@ -276,6 +256,11 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
                 </form>
               </div>
             </motion.div>
+          )}
+
+          {/* PROFIL PERSONNEL (Nouveau Onglet Complexifié) */}
+          {activeTab === 'profil' && (
+            <UserProfile user={user} API_URL={API_URL} onLogout={onLogout} />
           )}
 
         </AnimatePresence>
