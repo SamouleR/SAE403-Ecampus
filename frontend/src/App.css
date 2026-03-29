@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* --- BASE --- */
 body, html {
@@ -6,264 +6,112 @@ body, html {
   padding: 0;
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
-  background: #4facfe; /* Couleur de secours */
+  background: #1e3a8a;
 }
 
-/* FOND GÉNÉRAL BLEU DÉGRADÉ */
+* {
+  box-sizing: border-box;
+}
+
+/* --- LAYOUTS DÉGRADÉS (CENTRAGE) --- */
 .login-blue-bg, .public-wrapper {
   min-height: 100vh;
   width: 100vw;
-  background: linear-gradient(145deg, #4facfe 0%, #00f2fe 100%);
+  background: radial-gradient(circle at top right, #4facfe, #00f2fe, #1e3a8a);
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center; /* Centre horizontalement */
+  align-items: center;     /* Centre verticalement */
   color: white;
   position: relative;
 }
 
-/* --- NAVBAR STYLE "PILL" (GÉLULE) --- */
-.public-header-pill {
-  position: fixed;
-  top: 20px;
-  width: 90%;
-  max-width: 1100px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(15px);
-  padding: 12px 40px;
-  border-radius: 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-
-.logo-text {
-  font-weight: 800;
-  letter-spacing: 2px;
-  font-size: 1.2rem;
-  color: white;
-}
-
-/* FILTRES DANS LA NAVBAR */
-.nav-filters {
-  display: flex;
-  gap: 30px;
-  color: white;
-  font-weight: 500;
-}
-
-/* STYLE DROPDOWNS GLASS */
-.dropdown {
-  position: relative;
-  cursor: pointer;
-}
-
-.dropdown-label {
-  transition: opacity 0.2s;
-}
-
-.dropdown:hover .dropdown-label {
-  opacity: 0.7;
-}
-
-.dropdown-menu {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  color: #333;
-  min-width: 150px;
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  margin-top: 15px;
-  padding: 10px 0;
-  overflow: hidden;
-}
-
-.dropdown:hover .dropdown-menu {
-  display: block;
-}
-
-.dropdown-menu div {
-  padding: 10px 20px;
-  font-size: 0.9rem;
-  transition: 0.2s;
-}
-
-.dropdown-menu div:hover {
-  background: #4facfe;
-  color: white;
-}
-
-.btn-connexion-pill {
-  background: white;
-  color: #4facfe;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 30px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.3s;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-}
-
-.btn-connexion-pill:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  background: #f0f0f0;
-}
-
-/* --- VUE PUBLIC CONTENU --- */
-.public-main {
-  margin-top: 120px;
-  text-align: center;
-  width: 90%;
-  max-width: 1200px;
-}
-
-.vue-title {
-  font-size: 3rem;
-  margin-bottom: 40px;
-  font-weight: 700;
-}
-
-.sae-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 30px;
-  padding-bottom: 50px;
-}
-
-/* --- CARTES GLASSMORPHISM --- */
-.sae-glass-card {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border-radius: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  overflow: hidden;
-  transition: transform 0.3s, box-shadow 0.3s;
-  text-align: left;
-}
-
-.sae-glass-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.sae-img {
-  height: 180px;
-  background-size: cover;
-  background-position: center;
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.sae-info {
-  padding: 25px;
-}
-
-.ressource-tag {
-  background: #ffcc00;
-  color: black;
-  padding: 4px 12px;
-  border-radius: 15px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.sae-info h3 {
-  margin: 15px 0 10px;
-  font-size: 1.2rem;
-}
-
-.sae-info p {
-  font-size: 0.9rem;
-  opacity: 0.8;
-  line-height: 1.5;
-  height: 50px; /* Limite la description */
-  overflow: hidden;
-}
-
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.note {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.btn-details-blue {
-  background: white;
-  color: #4facfe;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn-details-blue:hover {
-  background: #f0f0f0;
-}
-
-/* --- LOGIN CAROUSEL & FORMS --- */
+/* --- NAVIGATION CARROUSEL --- */
 .login-carousel-wrapper {
   display: flex;
   align-items: center;
-  gap: 60px;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 900px;
+  z-index: 2;
+}
+
+/* --- CARTE DE CONNEXION (GLASS) --- */
+.login-form-blue {
+  width: 400px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(25px);
+  padding: 50px 40px;
+  border-radius: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+.role-title-display {
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* --- FORMULAIRES STYLE PILULE --- */
+.input-group-blue {
+  text-align: left;
+}
+
+.input-group-blue label {
+  display: block;
+  margin-bottom: 8px;
+  margin-left: 15px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.input-group-blue input {
+  width: 100%;
+  padding: 16px 25px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  color: white;
+  outline: none;
+  font-size: 1rem;
+}
+
+.input-group-blue input:focus {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: white;
+}
+
+/* --- BOUTONS --- */
+.btn-blue-outline {
+  padding: 16px;
+  background: white;
+  color: #1e3a8a;
+  border: none;
+  border-radius: 50px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-blue-outline:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 25px rgba(0,0,0,0.2);
 }
 
 .nav-btn-white {
   background: none;
   border: none;
   color: white;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  font-size: 1.1rem;
-}
-
-.login-form-blue {
-  width: 350px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 40px;
-  border-radius: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  backdrop-filter: blur(10px);
-}
-
-.input-group-blue input {
-  width: 100%;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid white;
-  border-radius: 10px;
-  color: white;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.btn-blue-outline {
-  padding: 12px;
-  background: white;
-  color: #4facfe;
-  border: none;
-  border-radius: 30px;
-  font-weight: 800;
-  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 10px;
 }
 
 .back-to-public {
@@ -271,8 +119,27 @@ body, html {
   top: 40px;
   left: 40px;
   color: white;
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid white;
+  padding: 10px 20px;
+  border-radius: 30px;
   cursor: pointer;
   font-weight: 600;
+}
+
+/* --- STYLE NAVBAR PILL --- */
+.public-header-pill {
+  position: fixed;
+  top: 20px;
+  width: 90%;
+  max-width: 1100px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  padding: 12px 40px;
+  border-radius: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 1000;
 }

@@ -18,7 +18,6 @@ export default function App() {
   const [roleIndex, setRoleIndex] = useState(1);
   const [credentials, setCredentials] = useState({ email: '', pass: '' });
 
-  // On harmonise les IDs pour correspondre à la base de données
   const roles = [
     { label: "ÉTUDIANTE", id: "etudiant" },
     { label: "ADMINISTRATEUR", id: "admin" },
@@ -55,33 +54,29 @@ export default function App() {
     setShowLogin(false);
   };
 
-  // --- LOGIQUE D'AFFICHAGE DES DASHBOARDS (CORRIGÉE) ---
+  // --- LOGIQUE D'AFFICHAGE DES DASHBOARDS ---
   if (user) {
-    // 1. Vue Admin
     if (user.role === "admin") {
       return <AdminDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
     }
-    
-    // 2. Vue Étudiant
     if (user.role === "etudiant") {
       return <StudentDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
     }
-
-    // 3. Vue Professeur (Définitif)
     if (user.role === "professeur" || user.role === "enseignant") {
       return <TeacherDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
     }
     
-    // Sécurité si le rôle est inconnu
     return (
       <div className="login-blue-bg">
-        <h2>Rôle non reconnu : {user.role}</h2>
-        <button className="btn-blue-outline" onClick={handleLogout}>Retour</button>
+        <div className="login-form-blue">
+          <h2>Rôle non reconnu : {user.role}</h2>
+          <button className="btn-blue-outline" onClick={handleLogout}>Retour</button>
+        </div>
       </div>
     );
   }
 
-  // --- FORMULAIRE DE CONNEXION ---
+  // --- FORMULAIRE DE CONNEXION (CENTRÉ) ---
   if (showLogin) {
     return (
       <div className="login-blue-bg">
@@ -99,40 +94,43 @@ export default function App() {
           </button>
 
           <AnimatePresence mode="wait">
-            <motion.form 
-              key={roleIndex} 
-              initial={{ opacity: 0, y: 10 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              exit={{ opacity: 0, y: -10 }} 
-              onSubmit={handleLogin} 
-              className="login-form-blue"
+            <motion.div
+              key={roleIndex}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.3 }}
             >
-              <h2 className="role-title-display">{roles[roleIndex].label}</h2>
-              
-              <div className="input-group-blue">
-                <label>Email :</label>
-                <input 
-                  type="email" 
-                  autoComplete="email"
-                  onChange={e => setCredentials({...credentials, email: e.target.value})} 
-                  required 
-                />
-              </div>
+              <form onSubmit={handleLogin} className="login-form-blue">
+                <h2 className="role-title-display">{roles[roleIndex].label}</h2>
+                
+                <div className="input-group-blue">
+                  <label>Email :</label>
+                  <input 
+                    type="email" 
+                    autoComplete="email"
+                    onChange={e => setCredentials({...credentials, email: e.target.value})} 
+                    required 
+                    placeholder="votre@email.fr"
+                  />
+                </div>
 
-              <div className="input-group-blue">
-                <label>Mot de passe :</label>
-                <input 
-                  type="password" 
-                  autoComplete="current-password"
-                  onChange={e => setCredentials({...credentials, pass: e.target.value})} 
-                  required 
-                />
-              </div>
+                <div className="input-group-blue">
+                  <label>Mot de passe :</label>
+                  <input 
+                    type="password" 
+                    autoComplete="current-password"
+                    onChange={e => setCredentials({...credentials, pass: e.target.value})} 
+                    required 
+                    placeholder="••••••••"
+                  />
+                </div>
 
-              <button type="submit" className="btn-blue-outline">
-                SE CONNECTER
-              </button>
-            </motion.form>
+                <button type="submit" className="btn-blue-outline">
+                  SE CONNECTER
+                </button>
+              </form>
+            </motion.div>
           </AnimatePresence>
 
           <button 
@@ -147,6 +145,5 @@ export default function App() {
     );
   }
 
-  // --- VUE PUBLIC PAR DÉFAUT ---
   return <PublicLanding onShowLogin={() => setShowLogin(true)} API_URL={API_URL} />;
 }

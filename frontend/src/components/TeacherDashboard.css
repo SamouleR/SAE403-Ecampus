@@ -1,77 +1,241 @@
-.teacher-blue-screen {
-  min-height: 100vh;
-  background: radial-gradient(circle at top right, #4facfe, #00f2fe, #1e3a8a);
-  padding-top: 100px;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* --- RÉINITIALISATION & BASE --- */
+body, html {
+  margin: 0;
+  padding: 0;
   font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+  background: #1e3a8a; /* Couleur de secours sombre */
   color: white;
 }
 
-/* NAVBAR GÉLULE */
+* {
+  box-sizing: border-box;
+}
+
+/* --- LAYOUTS GÉNÉRAUX (DÉGRADÉ BLEU) --- */
+.login-blue-bg, 
+.public-wrapper, 
+.student-blue-layout,
+.teacher-blue-screen {
+  min-height: 100vh;
+  width: 100vw;
+  background: radial-gradient(circle at top right, #4facfe, #00f2fe, #1e3a8a);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* --- SYSTÈME DE CONNEXION (CENTRAGE ABSOLU) --- */
+.login-blue-bg {
+  justify-content: center; /* Centre la carte verticalement et horizontalement */
+}
+
+.login-carousel-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 900px;
+  z-index: 2;
+}
+
+.login-form-blue {
+  width: 420px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  padding: 50px 40px;
+  border-radius: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+.role-title-display {
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+/* --- NAVBARS STYLE "PILL" (GÉLULE) --- */
+.public-header-pill, 
+.pill-header,
 .teacher-nav-pill {
-  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-  width: 92%; max-width: 1200px;
-  background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(25px);
-  border-radius: 60px; padding: 10px 40px;
-  display: flex; justify-content: space-between; align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.3); z-index: 1000;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  position: fixed;
+  top: 20px;
+  width: 90%;
+  max-width: 1100px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  padding: 12px 40px;
+  border-radius: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
-.brand { font-weight: 900; font-size: 1.4rem; letter-spacing: 2px; }
-.badge-admin { background: #ffcc00; color: black; padding: 2px 10px; border-radius: 6px; font-size: 0.7rem; vertical-align: middle; }
-
-.nav-items button {
-  background: none; border: none; color: white; padding: 10px 20px;
-  cursor: pointer; font-weight: 600; border-radius: 30px; transition: 0.3s;
-}
-.nav-items button.active { background: white; color: #1e3a8a; }
-
-.logout-pill { background: rgba(0,0,0,0.2); border: none; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; margin-left: 15px; }
-
-/* PANELS */
-.teacher-main-container { width: 92%; max-width: 1300px; margin: 0 auto; }
-
-.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-.stat-card {
-  background: rgba(255, 255, 255, 0.1); padding: 30px; border-radius: 25px;
-  text-align: center; border: 1px solid rgba(255, 255, 255, 0.2);
-}
-.stat-card h3 { font-size: 2.5rem; margin: 0; color: #ffcc00; }
-
-.glass-panel {
-  background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px);
-  padding: 40px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 40px;
+.header-nav-white button, .nav-items button {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 15px;
+  transition: 0.3s;
 }
 
-.glass-panel.medium { max-width: 700px; margin: 0 auto; }
-
-/* TABLES */
-.teacher-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-.teacher-table th { text-align: left; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.2); opacity: 0.7; }
-.teacher-table td { padding: 18px 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-
-.note-input-field {
-  width: 70px; background: white; border: none; padding: 10px;
-  border-radius: 10px; font-weight: 900; color: #1e3a8a; text-align: center;
+.header-nav-white button.active, .nav-items button.active {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
 }
 
-.dl-btn {
-  background: rgba(255,255,255,0.2); color: white; text-decoration: none;
-  padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; margin-right: 5px;
+/* --- GRILLES ET CARTES (SAE) --- */
+.public-main, .student-content-centered, .teacher-main-container {
+  margin-top: 140px;
+  width: 90%;
+  max-width: 1200px;
 }
 
-/* FORMS */
-.complex-form { display: flex; flex-direction: column; gap: 20px; }
-.form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.complex-form input, .complex-form select, .complex-form textarea {
-  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-  padding: 15px; border-radius: 12px; color: white; outline: none;
-}
-.complex-form textarea { height: 150px; }
-.btn-gradient {
-  background: linear-gradient(to right, #ffffff, #a5d8ff); color: #1e3a8a;
-  border: none; padding: 18px; border-radius: 15px; font-weight: 900; cursor: pointer;
+.sae-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 30px;
+  padding-bottom: 50px;
 }
 
-.loader-prof { height: 100vh; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; background: #1e3a8a; color: white; }
+.sae-glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  border-radius: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.sae-glass-card:hover {
+  transform: translateY(-5px);
+  border-color: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.sae-image-container {
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.sae-ressource-badge {
+  background: #ffcc00;
+  color: black;
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+/* --- ESPACE DÉPÔT (DRAG & DROP) --- */
+.sae-detail-container {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 30px;
+  margin-top: 20px;
+}
+
+.drag-drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.drag-drop-zone:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: white;
+}
+
+/* --- BOUTONS & INPUTS STYLE PILULE --- */
+.input-group-blue input, .glass-input-text {
+  width: 100%;
+  padding: 16px 25px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  color: white;
+  outline: none;
+}
+
+.btn-blue-outline, .btn-connexion-pill {
+  padding: 15px 30px;
+  background: white;
+  color: #1e3a8a;
+  border: none;
+  border-radius: 50px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-confirm-deposit {
+  width: 100%;
+  background: #111; /* Style noir comme sur l'image fc67e7 */
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+/* --- HISTORIQUE & BADGES --- */
+.history-card-glass {
+  background: rgba(255, 255, 255, 0.15);
+  border-left: 5px solid #34c759; /* Vert pour les travaux rendus */
+  padding: 25px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.badge-rendu-green {
+  background: #e2f9e9;
+  color: #1a7f37;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.urgent-border {
+  border-left: 5px solid #ff3b30 !important; /* Bordure rouge pour les délais proches */
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+  .sae-detail-container {
+    grid-template-columns: 1fr;
+  }
+  .login-carousel-wrapper {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
