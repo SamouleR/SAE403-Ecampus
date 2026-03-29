@@ -1,14 +1,16 @@
-/* Public.css - Design Immersif Glassmorphism */
 
+
+/* --- BASE & BACKGROUND --- */
 .public-wrapper {
     min-height: 100vh;
     background: radial-gradient(circle at top left, #4facfe 0%, #00f2fe 40%, #182b3a 100%);
-    padding-top: 100px;
+    padding-top: 120px;
     font-family: 'Inter', sans-serif;
     color: white;
+    overflow-x: hidden;
 }
 
-/* NAVBAR GÉLULE FLOTTANTE */
+/* --- NAVBAR GÉLULE SIMPLIFIÉE --- */
 .public-header-pill {
     position: fixed;
     top: 25px;
@@ -17,139 +19,148 @@
     width: 90%;
     max-width: 1200px;
     background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 100px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 35px;
+    padding: 12px 40px;
     z-index: 2000;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
 }
 
 .logo-section {
     font-weight: 900;
-    font-size: 1.4rem;
-    letter-spacing: 3px;
-    background: linear-gradient(to right, #fff, #a5d8ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 1.5rem;
+    letter-spacing: 4px;
+    color: white;
+    text-transform: uppercase;
 }
 
-/* FILTRES ANIMÉS */
-.nav-filters {
-    display: flex;
-    gap: 25px;
+/* --- BARRE DE RECHERCHE --- */
+.search-bar-container {
+    flex: 1;
+    max-width: 400px;
+    margin: 0 20px;
 }
 
-.filter-group {
-    position: relative;
-}
-
-.filter-trigger {
+.search-input-glass {
+    width: 100%;
     background: rgba(255, 255, 255, 0.1);
-    padding: 8px 18px;
-    border-radius: 30px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.filter-trigger:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.5);
-}
-
-.filter-dropdown {
-    position: absolute;
-    top: 120%;
-    left: 0;
-    background: rgba(20, 30, 48, 0.95);
-    backdrop-filter: blur(15px);
-    border-radius: 15px;
-    min-width: 180px;
-    padding: 10px 0;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    border: 1px solid rgba(255,255,255,0.1);
-    opacity: 0;
-    transform: translateY(10px);
-    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 10px 25px;
+    border-radius: 50px;
+    color: white;
+    outline: none;
     transition: 0.3s;
 }
 
-.filter-group:hover .filter-dropdown {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
+.search-input-glass:focus {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
 }
 
-.filter-item {
-    padding: 10px 20px;
-    transition: 0.2s;
-    font-size: 0.85rem;
+.btn-connexion-pill {
+    background: white;
+    color: #1e3a8a;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 50px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
-.filter-item:hover {
-    background: #4facfe;
-    padding-left: 25px;
+/* --- SECTION FILTRES (IMAGE fbf865.png) --- */
+.filters-row-glass {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px 35px;
+    border-radius: 25px;
+    margin-bottom: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
 }
 
-/* GRID & CARDS */
+.filter-group-years {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.filter-label {
+    font-weight: 600;
+    margin-right: 10px;
+    font-size: 0.9rem;
+}
+
+.year-chip {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 8px 22px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: 500;
+}
+
+.year-chip.active {
+    background: white;
+    color: black;
+    font-weight: 800;
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+}
+
+.domain-select-glass {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 12px;
+    outline: none;
+    cursor: pointer;
+}
+
+.domain-select-glass option {
+    background: #182b3a;
+}
+
+/* --- GRILLE ET CARTES --- */
 .public-main {
     width: 90%;
-    max-width: 1400px;
+    max-width: 1300px;
     margin: 0 auto;
-}
-
-.hero-section {
-    text-align: center;
-    margin-bottom: 60px;
-}
-
-.hero-section h1 {
-    font-size: 4rem;
-    font-weight: 900;
-    margin-bottom: 10px;
 }
 
 .sae-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 40px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 35px;
 }
 
 .sae-card-glass {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 35px;
     border: 1px solid rgba(255, 255, 255, 0.15);
     overflow: hidden;
-    position: relative;
     transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .sae-card-glass:hover {
-    transform: translateY(-15px) scale(1.02);
-    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-12px);
+    background: rgba(255, 255, 255, 0.12);
     border-color: rgba(255, 255, 255, 0.4);
 }
 
 .sae-banner {
-    height: 220px;
+    height: 200px;
     background-size: cover;
     background-position: center;
     position: relative;
-}
-
-.sae-banner::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 50%;
-    background: linear-gradient(to top, rgba(20, 30, 48, 0.8), transparent);
 }
 
 .badge-semestre {
@@ -157,50 +168,114 @@
     top: 20px;
     right: 20px;
     background: #ffcc00;
-    color: #000;
+    color: black;
     padding: 5px 15px;
     border-radius: 50px;
     font-weight: 900;
-    font-size: 0.7rem;
-    z-index: 5;
+    font-size: 0.75rem;
 }
 
 .sae-content {
-    padding: 30px;
+    padding: 25px;
 }
 
-.sae-content h3 {
-    margin: 0 0 15px 0;
-    font-size: 1.5rem;
-    color: #4facfe;
-}
-
-.sae-content p {
-    font-size: 0.95rem;
-    line-height: 1.6;
+.line-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
     opacity: 0.7;
-    margin-bottom: 25px;
-}
-
-.card-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
 }
 
 .btn-explore {
-    background: white;
-    color: #182b3a;
-    padding: 10px 25px;
-    border-radius: 15px;
-    font-weight: 800;
+    background: #4facfe;
+    color: white;
     border: none;
+    padding: 12px 20px;
+    border-radius: 15px;
+    font-weight: 700;
     cursor: pointer;
+    width: 100%;
     transition: 0.3s;
 }
 
-.btn-explore:hover {
-    background: #4facfe;
+/* --- VUE DÉTAILLÉE --- */
+.detail-view-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.detail-glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(30px);
+    border-radius: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+}
+
+.detail-header-split {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    min-height: 400px;
+}
+
+.detail-img-box {
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.detail-info-box {
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.detail-main-title {
+    font-size: 3rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin: 15px 0 25px 0;
+}
+
+.detail-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.meta-item strong {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.6;
+    letter-spacing: 1px;
+}
+
+.detail-body-content {
+    padding: 50px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.btn-pdf-download {
+    display: inline-block;
+    background: white;
+    color: #1e3a8a;
+    padding: 15px 35px;
+    border-radius: 15px;
+    text-decoration: none;
+    font-weight: 800;
+    margin-top: 25px;
+}
+
+.btn-back-public {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid white;
     color: white;
-    box-shadow: 0 0 20px rgba(79, 172, 254, 0.6);
+    padding: 10px 25px;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-bottom: 25px;
 }
