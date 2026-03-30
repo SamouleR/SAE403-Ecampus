@@ -104,9 +104,20 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
   };
 
   const handleValidateUser = (id) => {
-    fetch(`${API_URL}/api/admin/users/${id}/validate`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => res.json()).then(data => { alert(data.message); fetchCatalogueData(); });
-  };
+    // Appel de la nouvelle route PUT avec l'ID de l'étudiant
+    fetch(`${API_URL}/api/admin/users/${id}/validate`, { 
+        method: 'PUT', // On utilise PUT pour une mise à jour
+        headers: { 
+            'Authorization': `Bearer ${token}` 
+        } 
+    })
+    .then(res => res.json())
+    .then(data => { 
+        alert(data.message); 
+        fetchCatalogueData(); // On rafraîchit la liste pour faire disparaître l'étudiant validé
+    })
+    .catch(err => alert("Erreur : " + err.message));
+};
 
   const handleChangePassword = (id, email) => {
     const newPassword = window.prompt(`Entrez le NOUVEAU mot de passe pour l'étudiant : ${email}`);

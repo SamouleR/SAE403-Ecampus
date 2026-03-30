@@ -7,7 +7,7 @@ export default function Register({ onShowLogin, API_URL }) {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'student' // Par défaut
+    role: 'etudiant' // Ajusté pour correspondre à tes rôles BDD
   });
 
   const handleSubmit = async (e) => {
@@ -17,20 +17,24 @@ export default function Register({ onShowLogin, API_URL }) {
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      // MODIFICATION ICI : Suppression de /auth/ pour éviter la 404
+      // Dans Register.js
+const res = await fetch(`${API_URL}/api/register`, { // Utilise bien /api/register
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(formData)
+});
+
       const data = await res.json();
+      
       if (res.ok) {
         alert("Inscription réussie ! Attendez la validation d'un administrateur.");
         onShowLogin();
       } else {
-        alert(data.message);
+        alert(data.message || "Erreur lors de l'inscription");
       }
     } catch (err) {
-      alert("Erreur lors de l'inscription.");
+      alert("Impossible de contacter le serveur.");
     }
   };
 
@@ -49,7 +53,7 @@ export default function Register({ onShowLogin, API_URL }) {
             <label>Adresse Email Universitaire</label>
             <input 
               type="email" 
-              placeholder="ex: etudiant@mmi-clermont.fr"
+              placeholder="ex: etudiant@mmi-velizy.fr"
               onChange={(e) => setFormData({...formData, email: e.target.value})}
               required 
             />

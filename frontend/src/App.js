@@ -123,10 +123,10 @@ export default function App() {
           exit={{ x: -100, opacity: 0 }}
           className="login-blue-bg"
         >
-          <button className="back-to-public" onClick={() => setView('public')}>← Retour</button>
+          <button className="back-to-public" onClick={() => setView('public')}>[ Retour ]</button>
           
           <div className="login-carousel-wrapper">
-            <button type="button" className="nav-btn-white" onClick={() => setRoleIndex((roleIndex - 1 + 3) % 3)}> [ prréc ] </button>
+            <button type="button" className="nav-btn-white" onClick={() => setRoleIndex((roleIndex - 1 + 3) % 3)}> [ précédent ] </button>
 
             <form onSubmit={handleLogin} className="login-form-blue">
               <h2 className="role-title-display">{roles[roleIndex].label}</h2>
@@ -142,11 +142,11 @@ export default function App() {
               
               <div className="auth-footer" style={{marginTop:'20px', color:'white', fontSize:'0.8rem'}}>
                 Pas encore de compte ? 
-                <button type="button" onClick={() => setView('register')} style={{background:'none', border:'none', color:'#00f2fe', cursor:'pointer', marginLeft:'5px', fontWeight:'bold'}}>S'inscrire</button>
+                <button type="button" onClick={() => setView('register')} style={{background:'none', border:'none', color:'#000000', cursor:'pointer', marginLeft:'5px', fontWeight:'bold'}}> [ S'inscrire ]</button>
               </div>
             </form>
 
-            <button type="button" className="nav-btn-white" onClick={() => setRoleIndex((roleIndex + 1) % 3)}> [ suiv ] </button>
+            <button type="button" className="nav-btn-white" onClick={() => setRoleIndex((roleIndex + 1) % 3)}> [ suivant ] </button>
           </div>
         </motion.div>
       )}

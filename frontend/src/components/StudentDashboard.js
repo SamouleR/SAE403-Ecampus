@@ -22,6 +22,16 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
   const token = localStorage.getItem('token');
 
   // --- RÉCUPÉRATION DES DONNÉES ---
+
+  // Extrait des nouveaux calculs de stats pour l'étudiant
+const studentStats = useMemo(() => {
+    const notes = rendus.map(r => parseFloat(r.note)).filter(n => !isNaN(n));
+    const moyenne = notes.length > 0 ? (notes.reduce((a, b) => a + b, 0) / notes.length).toFixed(2) : "N/A";
+    const rendusEffectues = rendus.length;
+    const saeRestantes = saes.length - rendusEffectues;
+    
+    return { moyenne, rendusEffectues, saeRestantes };
+}, [rendus, saes]);
   
   const fetchAnnonces = useCallback(() => {
     fetch(`${API_URL}/api/annonces`, { headers: { 'Authorization': `Bearer ${token}` } })
