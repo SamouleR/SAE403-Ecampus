@@ -1,70 +1,43 @@
-# Getting Started with Create React App
+# 🚀 ECAMPUS - Plateforme de Gestion de SAE
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+ECAMPUS est une application web full-stack conçue pour faciliter la gestion des Situations d'Apprentissage et d'Évaluation (SAE). Elle permet aux professeurs de publier des sujets, aux étudiants de rendre leurs travaux et de mettre en avant les meilleures réalisations via une "Vitrine".
 
-## Available Scripts
+## ✨ Fonctionnalités
 
-In the project directory, you can run:
+### 👨‍🎓 Étudiants
+- **Catalogue des SAE** : Visualisation de tous les projets disponibles avec filtres par ressource.
+- **Espace de Rendu** : Dépôt de fichiers (PDF, Images) ou de liens externes (GitHub, Portfolio).
+- **Suivi** : Consultation des notes et des feedbacks.
+- **Vitrine** : Accès aux meilleures réalisations de la promotion validées par les professeurs.
 
-### `npm start`
+### 👨‍🏫 Administrateurs / Professeurs
+- **Gestion SAE** : Création, modification et validation des projets.
+- **Modération** : Validation des nouveaux comptes étudiants.
+- **Évaluation** : Système de notation des rendus.
+- **Mise en Vitrine** : Sélection des travaux étudiants à afficher publiquement.
+- **Annonces** : Diffusion de messages globaux sur la plateforme.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🛠️ Stack Technique
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Frontend** : React.js, Framer Motion (animations), CSS3.
+- **Backend** : Node.js, Express.
+- **Base de données** : MySQL.
+- **Gestion de fichiers** : Multer.
+- **Sécurité** : JSON Web Token (JWT) & bcrypt.
 
-### `npm test`
+## 📦 Installation
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Pré-requis
+- Node.js (v14+)
+- Serveur MySQL
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Backend
+1. Naviguer dans le dossier server : `cd server` (ou la racine si combiné).
+2. Installer les dépendances : `npm install`.
+3. Configurer le fichier `.env` :
+   ```env
+   DB_HOST=localhost
+   DB_USER=root
+   DB_PASSWORD=votre_mdp
+   DB_NAME=ecampus_db
+   JWT_SECRET=votre_cle_secrete

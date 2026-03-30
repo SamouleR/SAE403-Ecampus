@@ -22,6 +22,10 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
   const [annonces, setAnnonces] = useState([]);
   const [showAnnonces, setShowAnnonces] = useState(false);
 
+  // NOUVEAU : États pour la gestion de la vitrine
+  const [selectedSaeRendus, setSelectedSaeRendus] = useState([]);
+  const [viewingRendusFor, setViewingRendusFor] = useState(null);
+
   const fetchAnnonces = useCallback(() => {
     fetch(`${API_URL}/api/annonces`, { headers: { 'Authorization': `Bearer ${token}` } })
     .then(res => res.json()).then(data => setAnnonces(Array.isArray(data) ? data : []));
@@ -46,14 +50,43 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     }
   }, [activeTab, fetchAnnonces, fetchCatalogueData]);
 
-  // --- FONCTION DE CRÉATION D'ANNONCE ---
-// --- FONCTION DE CRÉATION D'ANNONCE (Version Debugging) ---
+  // NOUVEAU : Charger les rendus pour gérer la vitrine
+  const fetchRendusForSae = (saeId) => {
+    if (viewingRendusFor === saeId) {
+      setViewingRendusFor(null);
+      return;
+    }
+    setViewingRendusFor(saeId);
+    fetch(`${API_URL}/api/admin/saes/${saeId}/rendus`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => setSelectedSaeRendus(Array.isArray(data) ? data : []))
+    .catch(err => console.error("Erreur rendus:", err));
+  };
+
+  // NOUVEAU : Basculer l'état public/privé d'un rendu
+  const handleTogglePublic = (renduId, currentState) => {
+    fetch(`${API_URL}/api/admin/rendus/${renduId}/toggle-public`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify({ is_public: !currentState })
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message || "Visibilité mise à jour !");
+      fetchRendusForSae(viewingRendusFor); // Rafraîchir la liste
+    });
+  };
+
+  // --- FONCTION DE CRÉATION D'ANNONCE (Version Debugging) ---
   const handleCreateAnnonce = async (e) => {
     e.preventDefault();
     
     try {
-      // 💡 Astuce : On essaye d'abord vers /api/annonces (souvent la route par défaut)
-      // Si ça ne marche pas, tu pourras remettre /api/admin/annonces
       const res = await fetch(`${API_URL}/api/annonces`, {
         method: 'POST',
         headers: { 
@@ -65,7 +98,6 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
 
       const contentType = res.headers.get("content-type");
 
-      // Si le serveur renvoie une erreur (404, 403, 500...)
       if (!res.ok) {
         if (contentType && contentType.includes("application/json")) {
           const errorData = await res.json();
@@ -75,15 +107,13 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
         }
       }
 
-      // Si tout se passe bien
-      const data = await res.json();
+      await res.json();
       alert("Annonce publiée avec succès !");
       setAnnonceForm({ titre: '', contenu: '' }); // Vide le formulaire
       fetchAnnonces(); // Rafraîchit la liste
 
     } catch (err) {
       console.error("Détail complet de l'erreur :", err);
-      // L'alerte te donnera maintenant la cause exacte !
       alert(`Erreur de publication : ${err.message}`); 
     }
   };
@@ -105,9 +135,9 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     })
     .then(res => res.json())
     .then(data => { 
-      alert(data.message); 
+      alert(data.message || "SAE créée avec succès !");
       setSaeForm({ titre: '', ressource: '', date: '', desc: '', imageFile: null, pdfFile: null }); 
-      fetchAnnonces(); 
+      fetchCatalogueData(); 
     });
   };
 
@@ -218,17 +248,52 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
           {/* CATALOGUE */}
           {activeTab === 'catalogue' && (
             <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="tab-container">
-              <h2 className="black-title">Tous les projets SAE</h2>
+              <h2 className="black-title">Tous les projets SAE & Vitrine</h2>
               <div className="glass-card" style={{marginBottom: '40px'}}>
-                <div className="table-header-white"><span>Projet</span><span>Statut</span><span>Ressources</span></div>
+                <div className="table-header-white"><span>Projet</span><span>Statut</span><span>Action</span></div>
                 {allSaes.map(sae => (
-                  <div className="table-row-white" key={sae.id}>
-                    <span>{sae.titre}</span>
-                    <span style={{color: sae.status === 'VALIDE' ? '#00e676' : 'orange'}}>{sae.status}</span>
-                    <div className="file-links">
-                      {sae.pdf_link && <a href={`${API_URL}${sae.pdf_link}`} target="_blank" rel="noreferrer" className="link-badge">Ouvrir PDF</a>}
-                      {sae.image && <a href={`${API_URL}${sae.image}`} target="_blank" rel="noreferrer" className="link-badge">Voir Image</a>}
+                  <div key={sae.id}>
+                    <div className="table-row-white">
+                      <span>{sae.titre}</span>
+                      <span style={{color: sae.status === 'VALIDE' ? '#00e676' : 'orange'}}>{sae.status}</span>
+                      <div className="action-btns">
+                         <button className="link-badge" style={{background: '#4facfe', border: 'none', color: 'white', cursor: 'pointer'}} onClick={() => fetchRendusForSae(sae.id)}>
+                            {viewingRendusFor === sae.id ? "Fermer Vitrine" : "Gérer Vitrine"}
+                         </button>
+                      </div>
                     </div>
+
+                    {/* NOUVEAU : Liste des rendus pour la vitrine */}
+                    <AnimatePresence>
+                      {viewingRendusFor === sae.id && (
+                        <motion.div 
+                          initial={{ height: 0, opacity: 0 }} 
+                          animate={{ height: 'auto', opacity: 1 }} 
+                          exit={{ height: 0, opacity: 0 }}
+                          style={{ overflow: 'hidden', padding: '0 20px' }}
+                        >
+                          <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '15px', marginBottom: '15px' }}>
+                            <h4 style={{ fontSize: '0.9rem', marginBottom: '10px' }}>Sélectionner les travaux à afficher :</h4>
+                            {selectedSaeRendus.length === 0 ? <p>Aucun rendu reçu.</p> : selectedSaeRendus.map(r => (
+                              <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                <span style={{fontSize: '0.85rem'}}>{r.email}</span>
+                                <button 
+                                  onClick={() => handleTogglePublic(r.id, r.is_public)}
+                                  style={{
+                                    background: r.is_public ? '#00e676' : 'transparent',
+                                    border: '1px solid #00e676',
+                                    color: r.is_public ? 'black' : '#00e676',
+                                    borderRadius: '15px', padding: '2px 12px', cursor: 'pointer', fontSize: '0.7rem'
+                                  }}
+                                >
+                                  {r.is_public ? "En Vitrine ★" : "Rendre Public"}
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 ))}
                 {allSaes.length === 0 && <p style={{marginTop:'15px'}}>Aucune SAE trouvée dans la BDD.</p>}
@@ -363,7 +428,7 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
             </motion.div>
           )}
 
-          {/* PROFIL PERSONNEL (Composant Complexifié) */}
+          {/* PROFIL PERSONNEL */}
           {activeTab === 'profil' && (
             <UserProfile user={user} API_URL={API_URL} onLogout={onLogout} />
           )}
