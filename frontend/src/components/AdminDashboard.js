@@ -12,6 +12,9 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
   const [studentForm, setStudentForm] = useState({ email: '', password: '' });
   const [enrollForm, setEnrollForm] = useState({ email: '', ressource: '' });
   
+  // NOUVEAU : État pour le formulaire d'annonce
+  const [annonceForm, setAnnonceForm] = useState({ titre: '', contenu: '' });
+  
   const [allSaes, setAllSaes] = useState([]); // NOUVEAU : Toutes les SAEs
   const [pendingUsers, setPendingUsers] = useState([]);
   const [students, setStudents] = useState([]);
@@ -42,6 +45,48 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
       fetchCatalogueData();
     }
   }, [activeTab, fetchAnnonces, fetchCatalogueData]);
+
+  // --- FONCTION DE CRÉATION D'ANNONCE ---
+// --- FONCTION DE CRÉATION D'ANNONCE (Version Debugging) ---
+  const handleCreateAnnonce = async (e) => {
+    e.preventDefault();
+    
+    try {
+      // 💡 Astuce : On essaye d'abord vers /api/annonces (souvent la route par défaut)
+      // Si ça ne marche pas, tu pourras remettre /api/admin/annonces
+      const res = await fetch(`${API_URL}/api/annonces`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify(annonceForm)
+      });
+
+      const contentType = res.headers.get("content-type");
+
+      // Si le serveur renvoie une erreur (404, 403, 500...)
+      if (!res.ok) {
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Le serveur a renvoyé une erreur JSON.");
+        } else {
+          throw new Error(`Erreur HTTP ${res.status}. Vérifie que la route API existe bien dans ton Backend.`);
+        }
+      }
+
+      // Si tout se passe bien
+      const data = await res.json();
+      alert("Annonce publiée avec succès !");
+      setAnnonceForm({ titre: '', contenu: '' }); // Vide le formulaire
+      fetchAnnonces(); // Rafraîchit la liste
+
+    } catch (err) {
+      console.error("Détail complet de l'erreur :", err);
+      // L'alerte te donnera maintenant la cause exacte !
+      alert(`Erreur de publication : ${err.message}`); 
+    }
+  };
 
   const handleCreateSAE = (e) => {
     e.preventDefault();
@@ -104,9 +149,8 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
   };
 
   const handleValidateUser = (id) => {
-    // Appel de la nouvelle route PUT avec l'ID de l'étudiant
     fetch(`${API_URL}/api/admin/users/${id}/validate`, { 
-        method: 'PUT', // On utilise PUT pour une mise à jour
+        method: 'PUT', 
         headers: { 
             'Authorization': `Bearer ${token}` 
         } 
@@ -114,10 +158,10 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     .then(res => res.json())
     .then(data => { 
         alert(data.message); 
-        fetchCatalogueData(); // On rafraîchit la liste pour faire disparaître l'étudiant validé
+        fetchCatalogueData(); 
     })
     .catch(err => alert("Erreur : " + err.message));
-};
+  };
 
   const handleChangePassword = (id, email) => {
     const newPassword = window.prompt(`Entrez le NOUVEAU mot de passe pour l'étudiant : ${email}`);
@@ -136,6 +180,7 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
           <button className={activeTab === 'catalogue' ? 'active' : ''} onClick={() => setActiveTab('catalogue')}>Catalogue</button>
           <button className={activeTab === 'sae' ? 'active' : ''} onClick={() => setActiveTab('sae')}>SAE</button>
           <button className={activeTab === 'etudiant' ? 'active' : ''} onClick={() => setActiveTab('etudiant')}>Étudiant</button>
+          <button className={activeTab === 'annonces' ? 'active' : ''} onClick={() => setActiveTab('annonces')}>📢 Annonces</button>
           <button className={activeTab === 'profil' ? 'active' : ''} onClick={() => setActiveTab('profil')}>Profil</button>
         </nav>
         <div className="header-actions">
@@ -269,7 +314,56 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
             </motion.div>
           )}
 
-          {/* PROFIL PERSONNEL (Nouveau Onglet Complexifié) */}
+          {/* NOUVEAU : ONGLET GESTION DES ANNONCES */}
+          {activeTab === 'annonces' && (
+            <motion.div key="ann" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="tab-container">
+              <div className="glass-card">
+                <h2 className="black-title-inside">Diffuser une annonce globale</h2>
+                <form onSubmit={handleCreateAnnonce} className="sae-form-grid">
+                  <div className="input-group-blue">
+                    <label>Titre de l'annonce</label>
+                    <input 
+                      type="text" 
+                      value={annonceForm.titre} 
+                      onChange={e => setAnnonceForm({...annonceForm, titre: e.target.value})} 
+                      placeholder="Ex: Maintenance de la plateforme" 
+                      required 
+                    />
+                  </div>
+                  <div className="input-group-blue" style={{ marginTop: '15px' }}>
+                    <label>Contenu du message</label>
+                    <textarea 
+                      rows="4" 
+                      value={annonceForm.contenu} 
+                      onChange={e => setAnnonceForm({...annonceForm, contenu: e.target.value})} 
+                      placeholder="Tapez votre message ici..." 
+                      required
+                    ></textarea>
+                  </div>
+                  <button type="submit" className="btn-blue-outline centered-btn" style={{ marginTop: '20px' }}>
+                    PUBLIER L'ANNONCE
+                  </button>
+                </form>
+              </div>
+
+              <h2 className="black-title" style={{ marginTop: '40px' }}>Historique des annonces</h2>
+              <div className="glass-card">
+                <div className="table-header-white"><span>Titre</span><span>Message</span><span>Date</span></div>
+                {annonces.map(a => (
+                  <div className="table-row-white" key={a.id}>
+                    <strong>{a.titre}</strong>
+                    <span>{a.contenu}</span>
+                    <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+                      {new Date(a.date_creation || Date.now()).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+                {annonces.length === 0 && <p style={{ marginTop: '15px' }}>Aucune annonce n'a été diffusée.</p>}
+              </div>
+            </motion.div>
+          )}
+
+          {/* PROFIL PERSONNEL (Composant Complexifié) */}
           {activeTab === 'profil' && (
             <UserProfile user={user} API_URL={API_URL} onLogout={onLogout} />
           )}
