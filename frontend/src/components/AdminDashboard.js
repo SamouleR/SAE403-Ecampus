@@ -13,8 +13,8 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
   const [enrollForm, setEnrollForm] = useState({ email: '', ressource: '' });
   
   // NOUVEAU : État pour le formulaire d'annonce
-  const [annonceForm, setAnnonceForm] = useState({ titre: '', contenu: '' });
   
+  const [annonceForm, setAnnonceForm] = useState({ titre: '', contenu: '' });
   const [allSaes, setAllSaes] = useState([]); // NOUVEAU : Toutes les SAEs
   const [pendingUsers, setPendingUsers] = useState([]);
   const [students, setStudents] = useState([]);
@@ -28,19 +28,23 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
 
   const fetchAnnonces = useCallback(() => {
     fetch(`${API_URL}/api/annonces`, { headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => res.json()).then(data => setAnnonces(Array.isArray(data) ? data : []));
+    .then(res => res.json()).then(data => setAnnonces(Array.isArray(data) ? data : []))
+    .catch(err => console.error("Erreur lors du chargement des annonces:", err));
   }, [API_URL, token]);
 
   const fetchCatalogueData = useCallback(() => {
     // Fetch Toutes les SAEs
     fetch(`${API_URL}/api/admin/all-saes`, { headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => res.json()).then(data => setAllSaes(Array.isArray(data) ? data : []));
+    .then(res => res.json()).then(data => setAllSaes(Array.isArray(data) ? data : []))
+    .catch(err => console.error("Erreur lors du chargement des SAEs:", err));
     
     fetch(`${API_URL}/api/admin/pending-users`, { headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => res.json()).then(data => setPendingUsers(Array.isArray(data) ? data : []));
+    .then(res => res.json()).then(data => setPendingUsers(Array.isArray(data) ? data : []))
+    .catch(err => console.error("Erreur lors du chargement des utilisateurs en attente:", err));
 
     fetch(`${API_URL}/api/admin/etudiants`, { headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => res.json()).then(data => setStudents(Array.isArray(data) ? data : []));
+    .then(res => res.json()).then(data => setStudents(Array.isArray(data) ? data : []))
+    .catch(err => console.error("Erreur lors du chargement des étudiants:", err));
   }, [API_URL, token]);
 
   useEffect(() => {
@@ -50,40 +54,8 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     }
   }, [activeTab, fetchAnnonces, fetchCatalogueData]);
 
-  // NOUVEAU : Charger les rendus pour gérer la vitrine
-  const fetchRendusForSae = (saeId) => {
-    if (viewingRendusFor === saeId) {
-      setViewingRendusFor(null);
-      return;
-    }
-    setViewingRendusFor(saeId);
-    fetch(`${API_URL}/api/admin/saes/${saeId}/rendus`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(res => res.json())
-    .then(data => setSelectedSaeRendus(Array.isArray(data) ? data : []))
-    .catch(err => console.error("Erreur rendus:", err));
-  };
 
-  // NOUVEAU : Basculer l'état public/privé d'un rendu
-  const handleTogglePublic = (renduId, currentState) => {
-    fetch(`${API_URL}/api/admin/rendus/${renduId}/toggle-public`, {
-      method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` 
-      },
-      body: JSON.stringify({ is_public: !currentState })
-    })
-    .then(res => res.json())
-    .then(data => {
-      alert(data.message || "Visibilité mise à jour !");
-      fetchRendusForSae(viewingRendusFor); // Rafraîchir la liste
-    });
-  };
-
-  // --- FONCTION DE CRÉATION D'ANNONCE (Version Debugging) ---
-  const handleCreateAnnonce = async (e) => {
+const handlePostAnnonce = async (e) => {
     e.preventDefault();
     
     try {
@@ -118,7 +90,40 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     }
   };
 
-  const handleCreateSAE = (e) => {
+  
+  // NOUVEAU : Charger les rendus pour gérer la vitrine
+  const fetchRendusForSae = (saeId) => {
+    if (viewingRendusFor === saeId) {
+      setViewingRendusFor(null);
+      return;
+    }
+    setViewingRendusFor(saeId);
+    fetch(`${API_URL}/api/admin/saes/${saeId}/rendus`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => setSelectedSaeRendus(Array.isArray(data) ? data : []))
+    .catch(err => console.error("Erreur rendus:", err));
+  };
+
+  // NOUVEAU : Basculer l'état public/privé d'un rendu
+  const handleTogglePublic = (renduId, currentState) => {
+    fetch(`${API_URL}/api/admin/rendus/${renduId}/toggle-public`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify({ is_public: !currentState })
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message || "Visibilité mise à jour !");
+      fetchRendusForSae(viewingRendusFor); // Rafraîchir la liste
+    });
+  };
+
+  const handleCreateSAE = async (e) => {
     e.preventDefault();
     const formData = new FormData();
     formData.append('titre', saeForm.titre);
@@ -128,19 +133,44 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     if (saeForm.imageFile) formData.append('image', saeForm.imageFile);
     if (saeForm.pdfFile) formData.append('pdf', saeForm.pdfFile);
 
-    fetch(`${API_URL}/api/admin/saes`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
-      body: formData
-    })
-    .then(res => res.json())
-    .then(data => { 
+    try {
+      const res = await fetch(`${API_URL}/api/admin/saes`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erreur lors de la création de la SAE.");
+      }
+
+      const data = await res.json();
       alert(data.message || "SAE créée avec succès !");
       setSaeForm({ titre: '', ressource: '', date: '', desc: '', imageFile: null, pdfFile: null }); 
-      fetchCatalogueData(); 
-    });
+      fetchCatalogueData();
+    } catch (err) {
+      console.error("Erreur SAE:", err);
+      alert(`Erreur : ${err.message}`);
+    }
   };
 
+  const toggleSaeVisibility = async (saeId, currentStatus) => {
+    const newStatus = currentStatus === 'VALIDE' ? 'BROUILLON' : 'VALIDE';
+    try {
+        const res = await fetch(`${API_URL}/api/admin/saes/${saeId}/status`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) fetchCatalogueData(); // Rafraîchit la liste
+    } catch (err) {
+        console.error("Erreur visibilité:", err);
+    }
+};
   const handleCreateStudent = (e) => {
     e.preventDefault();
     fetch(`${API_URL}/api/admin/etudiants`, {
@@ -170,12 +200,24 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     });
   };
 
-  const handleEnrollStudent = (e) => {
+  const handleEnrollStudent = async (e) => {
     e.preventDefault();
-    fetch(`${API_URL}/api/admin/inscriptions`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify(enrollForm)
-    }).then(res => res.json()).then(data => { alert(data.message); setEnrollForm({ email: '', ressource: '' }); });
+    try {
+      const res = await fetch(`${API_URL}/api/admin/inscriptions`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(enrollForm)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message);
+        setEnrollForm({ email: '', ressource: '' });
+      } else {
+        throw new Error(data.message || "Erreur lors de l'inscription.");
+      }
+    } catch (err) {
+      console.error("Erreur inscription:", err);
+      alert(`Erreur : ${err.message}`);
+    }
   };
 
   const handleValidateUser = (id) => {
@@ -193,13 +235,23 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     .catch(err => alert("Erreur : " + err.message));
   };
 
-  const handleChangePassword = (id, email) => {
+  const handleChangePassword = async (id, email) => {
     const newPassword = window.prompt(`Entrez le NOUVEAU mot de passe pour l'étudiant : ${email}`);
     if (!newPassword) return;
-    fetch(`${API_URL}/api/admin/users/${id}/password`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ newPassword })
-    })
-    .then(res => res.json()).then(data => alert(data.message));
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users/${id}/password`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ newPassword })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message);
+      } else {
+        throw new Error(data.message || "Erreur lors du changement de mot de passe.");
+      }
+    } catch (err) {
+      console.error("Erreur mot de passe:", err);
+      alert(`Erreur : ${err.message}`);
+    }
   };
 
   return (
@@ -257,10 +309,29 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
                       <span>{sae.titre}</span>
                       <span style={{color: sae.status === 'VALIDE' ? '#00e676' : 'orange'}}>{sae.status}</span>
                       <div className="action-btns">
-                         <button className="link-badge" style={{background: '#4facfe', border: 'none', color: 'white', cursor: 'pointer'}} onClick={() => fetchRendusForSae(sae.id)}>
-                            {viewingRendusFor === sae.id ? "Fermer Vitrine" : "Gérer Vitrine"}
-                         </button>
-                      </div>
+    {/* Nouveau bouton de gestion de visibilité (Masquer/Publier) */}
+    <button 
+        className="link-badge" 
+        style={{
+            background: sae.status === 'VALIDE' ? '#ff4444' : '#00e676', 
+            border: 'none', 
+            color: 'white', 
+            marginRight: '5px', 
+            cursor: 'pointer'
+        }} 
+        onClick={() => toggleSaeVisibility(sae.id, sae.status)}>
+        {sae.status === 'VALIDE' ? "Masquer" : "Publier"}
+    </button>
+
+    {/* Bouton Vitrine existant mais simplifié */}
+    <button 
+        className="link-badge" 
+        style={{background: '#4facfe', border: 'none', color: 'white', cursor: 'pointer'}} 
+        onClick={() => fetchRendusForSae(sae.id)}
+    >
+        {viewingRendusFor === sae.id ? "Fermer Vitrine" : "Vitrine"}
+    </button>
+</div>
                     </div>
 
                     {/* NOUVEAU : Liste des rendus pour la vitrine */}
@@ -384,7 +455,7 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
             <motion.div key="ann" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="tab-container">
               <div className="glass-card">
                 <h2 className="black-title-inside">Diffuser une annonce globale</h2>
-                <form onSubmit={handleCreateAnnonce} className="sae-form-grid">
+                <form onSubmit={handlePostAnnonce} className="sae-form-grid">
                   <div className="input-group-blue">
                     <label>Titre de l'annonce</label>
                     <input 
@@ -436,5 +507,7 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
         </AnimatePresence>
       </main>
     </div>
+
+    
   );
 }

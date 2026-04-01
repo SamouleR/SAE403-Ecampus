@@ -4,9 +4,10 @@ import AdminDashboard from './components/AdminDashboard';
 import StudentDashboard from './components/StudentDashboard';
 import TeacherDashboard from './components/TeacherDashboard';
 import PublicLanding from './components/PublicLanding';
-import Register from './components/Register'; // Nouveau composant
+import Register from './components/Register';
 import './App.css';
 
+// ✅ CORRIGÉ : Pointe vers ton vrai backend au lieu de localhost
 const API_URL = "https://api.samuelralaikoa.mmi-velizy.fr";
 
 export default function App() {
@@ -15,7 +16,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [view, setView] = useState('public'); // Gère l'état : 'public', 'login', 'register'
+  const [view, setView] = useState('public');
   const [roleIndex, setRoleIndex] = useState(0);
   const [credentials, setCredentials] = useState({ email: '', pass: '' });
   const [isLoading, setIsLoading] = useState(true);
@@ -23,10 +24,10 @@ export default function App() {
   const roles = [
     { label: "ÉTUDIANTE", id: "etudiant" },
     { label: "ADMINISTRATEUR", id: "admin" },
-    { label: "ENSEIGNANTE", id: "professeur" } 
+    { label: "ENSEIGNANTE", id: "professeur" }
   ];
 
-  // --- COMPLEXIFICATION : VÉRIFICATION DE SESSION (Interaction BDD) ---
+  // ✅ CORRIGÉ : checkSession récupère bien l'objet user depuis data (pas data.user)
   const checkSession = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -40,12 +41,16 @@ export default function App() {
       });
       if (res.ok) {
         const data = await res.json();
-        setUser(data.user);
+        // /api/auth/me renvoie directement l'objet user (pas { user: ... })
+        setUser(data);
+        localStorage.setItem('user', JSON.stringify(data));
       } else {
         handleLogout();
       }
     } catch (err) {
-      console.error("Session expirée ou serveur injoignable");
+      console.error("Session expirée ou serveur injoignable", err.message);
+      // Ne pas déconnecter si c'est juste un problème réseau temporaire
+      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }
@@ -55,16 +60,15 @@ export default function App() {
     checkSession();
   }, [checkSession]);
 
-  // --- ACTIONS ---
   const handleLogin = (e) => {
     e.preventDefault();
     fetch(`${API_URL}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        email: credentials.email, 
-        password: credentials.pass, 
-        role: roles[roleIndex].id 
+      body: JSON.stringify({
+        email: credentials.email,
+        password: credentials.pass,
+        role: roles[roleIndex].id
       })
     })
     .then(async res => {
@@ -94,7 +98,7 @@ export default function App() {
     if (user.role === "admin") return <AdminDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
     if (user.role === "etudiant") return <StudentDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
     if (user.role === "professeur" || user.role === "enseignant") return <TeacherDashboard user={user} onLogout={handleLogout} API_URL={API_URL} />;
-    
+
     return (
       <div className="login-blue-bg">
         <div className="login-form-blue">
@@ -114,17 +118,17 @@ export default function App() {
         </motion.div>
       )}
 
-      {/* VUE : FORMULAIRE DE CONNEXION CAROUSEL */}
+      {/* VUE : FORMULAIRE DE CONNEXION */}
       {view === 'login' && (
-        <motion.div 
-          key="login" 
-          initial={{ x: 100, opacity: 0 }} 
-          animate={{ x: 0, opacity: 1 }} 
+        <motion.div
+          key="login"
+          initial={{ x: 100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
           exit={{ x: -100, opacity: 0 }}
           className="login-blue-bg"
         >
           <button className="back-to-public" onClick={() => setView('public')}>[ Retour ]</button>
-          
+
           <div className="login-carousel-wrapper">
             <button type="button" className="nav-btn-white" onClick={() => setRoleIndex((roleIndex - 1 + 3) % 3)}> [ précédent ] </button>
 
@@ -139,9 +143,9 @@ export default function App() {
                 <input type="password" onChange={e => setCredentials({...credentials, pass: e.target.value})} required placeholder="••••••••" />
               </div>
               <button type="submit" className="btn-blue-outline">SE CONNECTER</button>
-              
+
               <div className="auth-footer" style={{marginTop:'20px', color:'white', fontSize:'0.8rem'}}>
-                Pas encore de compte ? 
+                Pas encore de compte ?
                 <button type="button" onClick={() => setView('register')} style={{background:'none', border:'none', color:'#000000', cursor:'pointer', marginLeft:'5px', fontWeight:'bold'}}> [ S'inscrire ]</button>
               </div>
             </form>
@@ -151,9 +155,9 @@ export default function App() {
         </motion.div>
       )}
 
-      {/* VUE : INSCRIPTION (Nouveau) */}
+      {/* VUE : INSCRIPTION */}
       {view === 'register' && (
-        <motion.div 
+        <motion.div
           key="register"
           initial={{ x: 100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}

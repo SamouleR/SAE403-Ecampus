@@ -1,18 +1,26 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import UserProfile from './UserProfile'; 
-import WelcomeAnimation from './WelcomeAnimation'; // Importation de l'animation d'intro
+import WelcomeAnimation from './WelcomeAnimation'; 
 import './TeacherDashboard.css';
 
 export default function TeacherDashboard({ user, onLogout, API_URL }) {
   // --- ÉTATS DE L'INTERFACE ---
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
-  const [showWelcome, setShowWelcome] = useState(true); // État pour l'animation d'accueil
+  const [showWelcome, setShowWelcome] = useState(true); 
   const [saes, setSaes] = useState([]);
   const [rendus, setRendus] = useState([]);
   
-  const [saeForm, setSaeForm] = useState({ titre: '', ressource: '', date: '', desc: '', promotion: '2024', semestre: 'S1' });
+  // État du formulaire avec saisie manuelle libre
+  const [saeForm, setSaeForm] = useState({ 
+    titre: '', 
+    ressource: '', 
+    date: '', 
+    desc: '', 
+    promotion: '', 
+    semestre: '' 
+  });
   const [imageFile, setImageFile] = useState(null);
 
   const token = localStorage.getItem('token');
@@ -30,8 +38,11 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
       const dataRendus = await resRendus.json();
       setSaes(Array.isArray(dataSaes) ? dataSaes : []);
       setRendus(Array.isArray(dataRendus) ? dataRendus : []);
-    } catch (err) { console.error("Erreur de chargement:", err); }
-    finally { setLoading(false); }
+    } catch (err) { 
+      console.error("Erreur de chargement:", err); 
+    } finally { 
+      setLoading(false); 
+    }
   }, [API_URL, token]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -65,9 +76,7 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
         },
         body: JSON.stringify({ status: newStatus })
       });
-      if (res.ok) {
-        fetchData(); 
-      }
+      if (res.ok) { fetchData(); }
     } catch (err) {
       console.error("Erreur de visibilité :", err);
     }
@@ -95,17 +104,20 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
     Object.keys(saeForm).forEach(key => formData.append(key, saeForm[key]));
     if (imageFile) formData.append('image', imageFile);
 
-    const res = await fetch(`${API_URL}/api/admin/saes`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+    const res = await fetch(`${API_URL}/api/admin/saes`, { 
+      method: 'POST', 
+      headers: { 'Authorization': `Bearer ${token}` }, 
+      body: formData 
+    });
     if (res.ok) {
       alert("Projet publié avec succès !");
-      setSaeForm({ titre: '', ressource: '', date: '', desc: '', promotion: '2024', semestre: 'S1' });
+      setSaeForm({ titre: '', ressource: '', date: '', desc: '', promotion: '', semestre: '' });
       setImageFile(null);
       fetchData();
       setActiveTab('dashboard');
     }
   };
 
-  // --- GESTION DE L'ANIMATION DE BIENVENUE ---
   if (showWelcome) {
     return <WelcomeAnimation user={user} onFinished={() => setShowWelcome(false)} />;
   }
@@ -151,7 +163,7 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
             </motion.div>
           )}
 
-          {/* VUE CATALOGUE AVEC GESTION DE VISIBILITÉ */}
+          {/* VUE CATALOGUE */}
           {activeTab === 'catalogue' && (
             <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="tab-container">
               <h1 className="white-title-large">Catalogue & Visibilité</h1>
@@ -165,7 +177,6 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
                     ) : (
                       <div className="sae-image-placeholder">No Image</div>
                     )}
-                    
                     <div className="sae-card-content">
                       <div className="card-header-flex">
                         <span className="sae-ressource-badge">{sae.ressource}</span>
@@ -178,6 +189,9 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
                       </div>
                       <h3 className="sae-title">{sae.titre}</h3>
                       <p className="sae-desc">{sae.description}</p>
+                      <div className="sae-meta-info" style={{fontSize: '0.8rem', marginTop: '10px', opacity: 0.8}}>
+                        <span>Année: {sae.promotion}</span> | <span>Semestre: {sae.semestre}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -185,19 +199,35 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
             </motion.div>
           )}
 
-          {/* VUE CRÉATION */}
+          {/* VUE CRÉATION (AVEC SAISIE LIBRE) */}
           {activeTab === 'projets' && (
             <motion.div key="pj" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel full">
               <h2 className="panel-title-white">Créer une nouvelle SAE</h2>
               <form onSubmit={handleCreateSae} className="complex-form complex-form-teacher">
                 <div className="form-group">
-                  <div className="input-group-blue"><label>Titre</label><input type="text" onChange={e => setSaeForm({...saeForm, titre: e.target.value})} required /></div>
-                  <div className="input-group-blue"><label>Ressource</label><input type="text" onChange={e => setSaeForm({...saeForm, ressource: e.target.value})} required /></div>
+                  <div className="input-group-blue">
+                    <label>Titre de la SAE</label>
+                    <input type="text" value={saeForm.titre} onChange={e => setSaeForm({...saeForm, titre: e.target.value})} placeholder="Nom du projet..." required />
+                  </div>
+                  <div className="input-group-blue">
+                    <label>Matière / Ressource</label>
+                    <input type="text" value={saeForm.ressource} onChange={e => setSaeForm({...saeForm, ressource: e.target.value})} placeholder="Ex: Développement Web..." required />
+                  </div>
                 </div>
-                <div className="input-group-blue"><label>Consignes</label><textarea rows="4" onChange={e => setSaeForm({...saeForm, desc: e.target.value})}></textarea></div>
                 <div className="form-group">
-                  <div className="input-group-blue"><label>Date rendu</label><input type="date" onChange={e => setSaeForm({...saeForm, date: e.target.value})} required /></div>
-                  <div className="input-group-blue"><label>Image</label><input type="file" onChange={e => setImageFile(e.target.files[0])} /></div>
+                  <div className="input-group-blue">
+                    <label>Année / Promotion</label>
+                    <input type="text" value={saeForm.promotion} onChange={e => setSaeForm({...saeForm, promotion: e.target.value})} placeholder="Ex: 2026" required />
+                  </div>
+                  <div className="input-group-blue">
+                    <label>Semestre</label>
+                    <input type="text" value={saeForm.semestre} onChange={e => setSaeForm({...saeForm, semestre: e.target.value})} placeholder="Ex: S1" required />
+                  </div>
+                </div>
+                <div className="input-group-blue"><label>Consignes / Description</label><textarea rows="4" value={saeForm.desc} onChange={e => setSaeForm({...saeForm, desc: e.target.value})}></textarea></div>
+                <div className="form-group">
+                  <div className="input-group-blue"><label>Date limite de rendu</label><input type="date" value={saeForm.date} onChange={e => setSaeForm({...saeForm, date: e.target.value})} required /></div>
+                  <div className="input-group-blue"><label>Image d'illustration</label><input type="file" onChange={e => setImageFile(e.target.files[0])} /></div>
                 </div>
                 <button type="submit" className="btn-prof-outline submit-btn-teacher">Publier le projet</button>
               </form>
