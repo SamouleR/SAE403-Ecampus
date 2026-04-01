@@ -204,26 +204,51 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
             <motion.div key="pj" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel full">
               <h2 className="panel-title-white">Créer une nouvelle SAE</h2>
               <form onSubmit={handleCreateSae} className="complex-form complex-form-teacher">
-                <div className="form-group">
-                  <div className="input-group-blue">
-                    <label>Titre de la SAE</label>
-                    <input type="text" value={saeForm.titre} onChange={e => setSaeForm({...saeForm, titre: e.target.value})} placeholder="Nom du projet..." required />
-                  </div>
-                  <div className="input-group-blue">
-                    <label>Matière / Ressource</label>
-                    <input type="text" value={saeForm.ressource} onChange={e => setSaeForm({...saeForm, ressource: e.target.value})} placeholder="Ex: Développement Web..." required />
-                  </div>
-                </div>
-                <div className="form-group">
-                  <div className="input-group-blue">
-                    <label>Année / Promotion</label>
-                    <input type="text" value={saeForm.promotion} onChange={e => setSaeForm({...saeForm, promotion: e.target.value})} placeholder="Ex: 2026" required />
-                  </div>
-                  <div className="input-group-blue">
-                    <label>Semestre</label>
-                    <input type="text" value={saeForm.semestre} onChange={e => setSaeForm({...saeForm, semestre: e.target.value})} placeholder="Ex: S1" required />
-                  </div>
-                </div>
+  <div className="form-group">
+    <div className="input-group-blue">
+      <label>Titre de la SAE</label>
+      <input type="text" value={saeForm.titre} onChange={e => setSaeForm({...saeForm, titre: e.target.value})} required />
+    </div>
+    
+    {/* DROPDOWN MATIÈRE / DOMAINE */}
+    <div className="input-group-blue">
+      <label>Matière / Ressource</label>
+      <select 
+        className="glass-input-text" 
+        value={saeForm.ressource} 
+        onChange={e => setSaeForm({...saeForm, ressource: e.target.value})}
+      >
+        <option value="Développement Web">Développement Web</option>
+        <option value="Design & UX/UI">Design & UX/UI</option>
+        <option value="Communication Numérique">Communication Numérique</option>
+        <option value="Création Audiovisuelle">Création Audiovisuelle</option>
+      </select>
+    </div>
+  </div>
+
+  <div className="form-group">
+    <div className="input-group-blue">
+      <label>Année / Promotion</label>
+      <input type="text" value={saeForm.promotion} onChange={e => setSaeForm({...saeForm, promotion: e.target.value})} required />
+    </div>
+    
+    {/* DROPDOWN SEMESTRE */}
+    <div className="input-group-blue">
+      <label>Semestre</label>
+      <select 
+        className="glass-input-text" 
+        value={saeForm.semestre} 
+        onChange={e => setSaeForm({...saeForm, semestre: e.target.value})}
+      >
+        <option value="S1">Semestre 1</option>
+        <option value="S2">Semestre 2</option>
+        <option value="S3">Semestre 3</option>
+        <option value="S4">Semestre 4</option>
+        <option value="S5">Semestre 5</option>
+        <option value="S6">Semestre 6</option>
+      </select>
+    </div>
+  </div>
                 <div className="input-group-blue"><label>Consignes / Description</label><textarea rows="4" value={saeForm.desc} onChange={e => setSaeForm({...saeForm, desc: e.target.value})}></textarea></div>
                 <div className="form-group">
                   <div className="input-group-blue"><label>Date limite de rendu</label><input type="date" value={saeForm.date} onChange={e => setSaeForm({...saeForm, date: e.target.value})} required /></div>

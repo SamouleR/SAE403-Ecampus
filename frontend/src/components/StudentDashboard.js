@@ -16,9 +16,16 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
   const [renderLink, setRenderLink] = useState("");
   const [tempFile, setTempFile] = useState(null); 
 
-  // --- NOUVEAU : ÉTATS POUR LA VITRINE ---
+  // --- ÉTATS POUR LA VITRINE ---
   const [realisations, setRealisations] = useState([]);
   const [showGallery, setShowGallery] = useState(false);
+
+  // --- ÉTATS POUR LA MESSAGERIE ---
+  const [messages, setMessages] = useState([]); 
+  const [nouveauMsg, setNouveauMsg] = useState({ contenu: '' });
+  const [contacts, setContacts] = useState([]);
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [searchContact, setSearchContact] = useState('');
 
   const token = localStorage.getItem('token');
 
@@ -32,7 +39,36 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
     return { moyenne, rendusEffectues, saeRestantes };
   }, [submissions, saes]);
 
-  // --- NOUVEAU : FONCTION POUR RÉCUPÉRER LES RÉALISATIONS ---
+  // --- CALCUL NOTIFS TOTALES ---
+  const totalNotifs = useMemo(() => {
+    const unreadCount = messages.filter(m => !m.lu && m.destinataire_id === user.id).length;
+    return annonces.length + unreadCount;
+  }, [annonces, messages, user.id]);
+
+  // --- ACTIONS MESSAGERIE ---
+  const envoyerMessage = async (e) => {
+    e.preventDefault();
+    if (!nouveauMsg.contenu.trim()) return;
+    if (!selectedContact) {
+      alert("Veuillez sélectionner un contact !");
+      return;
+    }
+    
+    // Simulation d'envoi (À connecter à ton API /api/messages/envoyer)
+    const newMsg = {
+      id: Date.now(),
+      contenu: nouveauMsg.contenu,
+      expediteur_id: user.id,
+      expediteur_email: user.email,
+      destinataire_id: selectedContact.id,
+      date_envoi: new Date().toISOString(),
+      status: 'ACTIF'
+    };
+    setMessages(prev => [...prev, newMsg]);
+    setNouveauMsg({ contenu: '' });
+  };
+
+  // --- RÉCUPÉRATION DES RÉALISATIONS ---
   const openGallery = (saeId) => {
     fetch(`${API_URL}/api/saes/${saeId}/realisations`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -79,11 +115,27 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
     }).catch(err => console.error("Erreur rendus:", err));
   }, [API_URL, token]);
 
+  const fetchMessages = useCallback(() => {
+    fetch(`${API_URL}/api/messages`, { headers: { 'Authorization': `Bearer ${token}` } })
+    .then(res => res.json())
+    .then(data => setMessages(Array.isArray(data) ? data : []))
+    .catch(err => console.error("Erreur messages:", err));
+  }, [API_URL, token]);
+
+  const fetchContacts = useCallback(() => {
+    fetch(`${API_URL}/api/users`, { headers: { 'Authorization': `Bearer ${token}` } })
+    .then(res => res.json())
+    .then(data => setContacts(Array.isArray(data) ? data.filter(u => u.id !== user.id) : []))
+    .catch(err => console.error("Erreur contacts:", err));
+  }, [API_URL, token, user.id]);
+
   useEffect(() => {
     fetchAnnonces();
     fetchSaes();
     fetchMySubmissions();
-  }, [fetchAnnonces, fetchSaes, fetchMySubmissions]);
+    fetchMessages();
+    fetchContacts();
+  }, [fetchAnnonces, fetchSaes, fetchMySubmissions, fetchMessages, fetchContacts]);
 
   const handleFileUpload = (saeId, e) => {
     if (e && e.target && e.target.files) {
@@ -173,11 +225,13 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
           <div className="header-logo-text" style={{marginRight: '20px'}}>ECAMPUS</div>
           <button className={activeTab === 'catalogue' ? 'active' : ''} onClick={() => changeTab('catalogue')}>Catalogue</button>
           <button className={activeTab === 'sae' ? 'active' : ''} onClick={() => changeTab('sae')}>SAE (En cours)</button>
+          <button className={activeTab === 'messagerie' ? 'active' : ''} onClick={() => changeTab('messagerie')}>Messagerie</button>
           <button className={activeTab === 'profil' ? 'active' : ''} onClick={() => changeTab('profil')}>Profil</button>
         </nav>
         <div className="header-actions">
           <div className="notification-wrapper">
             <span className="bell-icon" onClick={() => setShowNotifs(!showNotifs)}>🔔</span>
+            {totalNotifs > 0 && <span className="badge">{totalNotifs}</span>}
             <AnimatePresence>
               {showNotifs && (
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="notifs-panel">
@@ -207,7 +261,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
         <AnimatePresence mode="wait">
           
           {activeTab === 'catalogue' && (
-            <motion.div key="cat" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="tab-container">
+            <motion.div key="cat" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="tab-container">
               <div className="title-row">
                 <h1 className="white-title-large">Catalogue des SAE</h1>
                 <select value={filterMatiere} onChange={(e) => setFilterMatiere(e.target.value)} className="glass-select">
@@ -237,7 +291,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
           )}
 
           {activeTab === 'sae' && (
-            <motion.div key="sae" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="tab-container">
+            <motion.div key="sae" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="tab-container">
               {!selectedSae ? (
                 <>
                   <h1 className="white-title-large">Mes SAE en cours</h1>
@@ -282,8 +336,6 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                       <p>{selectedSae.description}</p>
                       <div style={{marginTop: '15px', display: 'flex', gap: '10px'}}>
                         {selectedSae.pdf_link && <a href={`${API_URL}${selectedSae.pdf_link}`} target="_blank" rel="noreferrer" style={{color: '#00f2fe', textDecoration: 'underline'}}>Sujet complet (PDF)</a>}
-                        
-                        {/* --- NOUVEAU : BOUTON VITRINE --- */}
                         <button 
                           onClick={() => openGallery(selectedSae.id)}
                           style={{ background: 'none', border: 'none', color: '#ffcc00', textDecoration: 'underline', cursor: 'pointer', fontWeight: 'bold' }}
@@ -320,8 +372,79 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
             </motion.div>
           )}
 
+          {activeTab === 'messagerie' && (
+            <motion.div key="msg" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="tab-container">
+              <h2 className="white-title-large">Messagerie directe</h2>
+              <div className="messagerie-container">
+                <div className="contacts-panel">
+                  <input 
+                    type="text" 
+                    className="glass-input-text" 
+                    placeholder="Rechercher un contact..." 
+                    value={searchContact} 
+                    onChange={(e) => setSearchContact(e.target.value)} 
+                  />
+                  <div className="contacts-list">
+                    {contacts.filter(c => c.email.toLowerCase().includes(searchContact.toLowerCase())).map(contact => (
+                      <div 
+                        key={contact.id} 
+                        className={`contact-item ${selectedContact?.id === contact.id ? 'active' : ''}`} 
+                        onClick={() => setSelectedContact(contact)}
+                      >
+                        {contact.email.split('@')[0]}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="chat-panel">
+                  {selectedContact ? (
+                    <>
+                      <h3>Chat avec {selectedContact.email.split('@')[0]}</h3>
+                      <div className="glass-card chat-window">
+                        <div className="chat-container">
+                          {messages.filter(m => 
+                            (m.expediteur_id === user.id && m.destinataire_id === selectedContact.id) || 
+                            (m.expediteur_id === selectedContact.id && m.destinataire_id === user.id)
+                          ).length === 0 ? <p style={{textAlign: 'center', marginTop: '20px'}}>Aucun message.</p> : 
+                          messages.filter(m => 
+                            (m.expediteur_id === user.id && m.destinataire_id === selectedContact.id) || 
+                            (m.expediteur_id === selectedContact.id && m.destinataire_id === user.id)
+                          ).map((msg) => (
+                            <div 
+                              key={msg.id} 
+                              className={`message-bubble ${msg.expediteur_id === user.id ? 'message-sent' : 'message-received'} 
+                                          ${msg.status === 'SUPPRIME_ADMIN' ? 'message-moderated' : ''}`}
+                            >
+                              <span className="msg-sender">{msg.expediteur_email ? msg.expediteur_email.split('@')[0] : 'Utilisateur'}</span>
+                              <p>{msg.contenu}</p>
+                              <span className="msg-date">{new Date(msg.date_envoi || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <form onSubmit={envoyerMessage} className="chat-input-area">
+                          <input 
+                            type="text" 
+                            className="glass-input-text" 
+                            placeholder="Message..." 
+                            value={nouveauMsg.contenu}
+                            onChange={(e) => setNouveauMsg({ contenu: e.target.value })}
+                          />
+                          <button type="submit" className="btn-send-ios">⬆️</button>
+                        </form>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="glass-card" style={{padding: '20px', textAlign: 'center'}}>
+                      <p>Sélectionnez un contact pour commencer une conversation.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {activeTab === 'profil' && (
-            <motion.div key="prof" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="tab-container">
+            <motion.div key="prof" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="tab-container">
               <h1 className="white-title-large">Mon Profil</h1>
               <div className="sae-grid" style={{marginBottom: '30px'}}>
                   <div className="sae-glass-card" style={{padding: '20px', textAlign: 'center'}}>
@@ -357,7 +480,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
         </AnimatePresence>
       </main>
 
-      {/* --- NOUVEAU : MODALE DE LA VITRINE --- */}
+      {/* MODALE DE LA VITRINE */}
       <AnimatePresence>
         {showGallery && (
           <motion.div 
@@ -373,7 +496,6 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                 <h2 className="white-title">🌟 Travaux mis en avant</h2>
                 <button onClick={() => setShowGallery(false)} className="btn-back">Fermer</button>
               </div>
-
               <div className="sae-grid">
                 {realisations.length > 0 ? realisations.map(rel => (
                   <div key={rel.id} className="sae-glass-card">
