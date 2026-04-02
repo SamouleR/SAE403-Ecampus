@@ -1,15 +1,17 @@
 {
   "files": {
-    "main.css": "/static/css/main.23bc6081.css",
-    "main.js": "/static/js/main.cf46d57e.js",
+    "main.css": "/static/css/main.6042c099.css",
+    "main.js": "/static/js/main.58f1478b.js",
     "static/js/453.825386d9.chunk.js": "/static/js/453.825386d9.chunk.js",
+    "static/media/NEULIS-REGULAR.OTF": "/static/media/NEULIS-REGULAR.8dc9812d3f978438653b.OTF",
+    "static/media/NEULISALT-REGULAR.OTF": "/static/media/NEULISALT-REGULAR.b1c142edfdef36f42652.OTF",
     "index.html": "/index.html",
-    "main.23bc6081.css.map": "/static/css/main.23bc6081.css.map",
-    "main.cf46d57e.js.map": "/static/js/main.cf46d57e.js.map",
+    "main.6042c099.css.map": "/static/css/main.6042c099.css.map",
+    "main.58f1478b.js.map": "/static/js/main.58f1478b.js.map",
     "453.825386d9.chunk.js.map": "/static/js/453.825386d9.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.23bc6081.css",
-    "static/js/main.cf46d57e.js"
+    "static/css/main.6042c099.css",
+    "static/js/main.58f1478b.js"
   ]
 }
