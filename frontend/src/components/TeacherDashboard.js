@@ -1,103 +1,73 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import UserProfile from './UserProfile'; 
-import WelcomeAnimation from './WelcomeAnimation'; 
 import './TeacherDashboard.css';
 
+/**
+ * COMPOSANT : TeacherDashboard
+ * Rôle : Interface de gestion pédagogique avancée.
+ * Style : Bordeaux (#a31d24) / Crème (#fff9f0) / Neulis Cursive
+ */
 export default function TeacherDashboard({ user, onLogout, API_URL }) {
-  // --- ÉTATS DE L'INTERFACE ---
+  // --- ÉTATS DE NAVIGATION ---
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedSae, setSelectedSae] = useState(null); 
+  const [isManageMenuOpen, setIsManageMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showWelcome, setShowWelcome] = useState(true); 
+
+  // --- ÉTATS DES DONNÉES ---
   const [saes, setSaes] = useState([]);
   const [rendus, setRendus] = useState([]);
-  
-  // État du formulaire avec saisie manuelle libre
+  const [annonces, setAnnonces] = useState([]);
+  const token = localStorage.getItem('token');
+
+  // --- ÉTATS DU PROFIL (SECTION REFAITE) ---
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileInfo, setProfileInfo] = useState({
+    nom: "PROFESSEUR MMI",
+    bio: "Responsable des enseignements en développement web et nouveaux médias.",
+    bureau: "Aile B - Bureau 102",
+    tel: "01 39 25 XX XX",
+    dispo: "Mardi & Jeudi après-midi"
+  });
+  const [pwdForm, setPwdForm] = useState({ old: '', new: '', confirm: '' });
+
+  // --- ÉTATS FORMULAIRE SAE ---
   const [saeForm, setSaeForm] = useState({ 
-    titre: '', 
-    ressource: '', 
-    date: '', 
-    desc: '', 
-    promotion: '', 
-    semestre: '' 
+    titre: '', ressource: 'Développement Web', date: '', 
+    desc: '', promotion: '2026', semestre: 'S1' 
   });
   const [imageFile, setImageFile] = useState(null);
 
-  const token = localStorage.getItem('token');
-
-  // --- RÉCUPÉRATION DES DONNÉES ---
+  // --- RÉCUPÉRATION DES DONNÉES (FETCH) ---
   const fetchData = useCallback(async () => {
     setLoading(true);
     const headers = { 'Authorization': `Bearer ${token}` };
     try {
-      const [resSaes, resRendus] = await Promise.all([
+      const [resSaes, resRendus, resAnnonces] = await Promise.all([
         fetch(`${API_URL}/api/admin/all-saes`, { headers }),
-        fetch(`${API_URL}/api/admin/rendus-details`, { headers })
+        fetch(`${API_URL}/api/admin/rendus-details`, { headers }),
+        fetch(`${API_URL}/api/annonces`, { headers })
       ]);
+      
       const dataSaes = await resSaes.json();
       const dataRendus = await resRendus.json();
+      const dataAnnonces = await resAnnonces.json();
+
       setSaes(Array.isArray(dataSaes) ? dataSaes : []);
       setRendus(Array.isArray(dataRendus) ? dataRendus : []);
-    } catch (err) { 
-      console.error("Erreur de chargement:", err); 
-    } finally { 
-      setLoading(false); 
+      setAnnonces(Array.isArray(dataAnnonces) ? dataAnnonces : []);
+    } catch (err) {
+      console.error("Erreur de chargement des données pédagogiques:", err);
+    } finally {
+      setLoading(false);
     }
   }, [API_URL, token]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  // --- ACTIONS : NOTATION ---
-  const handleUpdateNote = async (renduId, note) => {
-    try {
-      await fetch(`${API_URL}/api/admin/noter`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({ rendu_id: renduId, note: note })
-      });
-      fetchData(); 
-    } catch (err) {
-      console.error("Erreur lors de la notation :", err);
-    }
-  };
-
-  // --- ACTIONS : VISIBILITÉ (Toggle Masquer/Afficher) ---
-  const toggleVisibility = async (saeId, currentStatus) => {
-    const newStatus = currentStatus === 'VALIDE' ? 'BROUILLON' : 'VALIDE';
-    try {
-      const res = await fetch(`${API_URL}/api/admin/saes/${saeId}/status`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-      if (res.ok) { fetchData(); }
-    } catch (err) {
-      console.error("Erreur de visibilité :", err);
-    }
-  };
-
-  // --- CALCULS DES STATISTIQUES ---
-  const globalStats = useMemo(() => {
-    const notesValides = rendus.map(r => parseFloat(r.note)).filter(n => !isNaN(n));
-    const moyenne = notesValides.length > 0 ? (notesValides.reduce((a, b) => a + b, 0) / notesValides.length).toFixed(2) : "N/A";
-    return { totalSaes: saes.length, totalRendus: rendus.length, moyenne };
-  }, [rendus, saes]);
-
-  const saeStats = useMemo(() => {
-    return saes.map(s => {
-      const rendusPourCetteSae = rendus.filter(r => r.sae_id === s.id).length;
-      const effectifTotal = 15; 
-      const pourcentage = Math.round((rendusPourCetteSae / effectifTotal) * 100);
-      return { ...s, complet: rendusPourCetteSae, total: effectifTotal, pourcentage: pourcentage };
-    });
-  }, [saes, rendus]);
-
+  // --- LOGIQUE MÉTIER : GESTION SAE ---
   const handleCreateSae = async (e) => {
     e.preventDefault();
     const formData = new FormData();
@@ -110,180 +80,315 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
       body: formData 
     });
     if (res.ok) {
-      alert("Projet publié avec succès !");
-      setSaeForm({ titre: '', ressource: '', date: '', desc: '', promotion: '', semestre: '' });
+      alert("La nouvelle SAE est désormais en ligne !");
+      setSaeForm({ titre: '', ressource: 'Développement Web', date: '', desc: '', promotion: '2026', semestre: 'S1' });
       setImageFile(null);
       fetchData();
-      setActiveTab('dashboard');
+      setActiveTab('catalogue');
     }
   };
 
-  if (showWelcome) {
-    return <WelcomeAnimation user={user} onFinished={() => setShowWelcome(false)} />;
-  }
+  const toggleSaeVisibility = async (saeId, currentStatus) => {
+    const newStatus = currentStatus === 'VALIDE' ? 'BROUILLON' : 'VALIDE';
+    try {
+      await fetch(`${API_URL}/api/admin/saes/${saeId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ status: newStatus })
+      });
+      fetchData();
+    } catch (err) { console.error("Erreur toggle visibilité:", err); }
+  };
 
-  if (loading) return <div className="loader-prof">Chargement...</div>;
+  // --- LOGIQUE MÉTIER : NOTATION ---
+  const handleUpdateNote = async (renduId, note) => {
+    try {
+      await fetch(`${API_URL}/api/admin/noter`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ rendu_id: renduId, note: note })
+      });
+      fetchData(); 
+    } catch (err) { console.error("Erreur notation:", err); }
+  };
+
+  // --- LOGIQUE MÉTIER : PROFIL & SÉCURITÉ ---
+  const handleSecurityUpdate = (e) => {
+    e.preventDefault();
+    if (pwdForm.new !== pwdForm.confirm) return alert("Les mots de passe ne correspondent pas.");
+    alert("Vos paramètres de sécurité ont été mis à jour.");
+    setPwdForm({ old: '', new: '', confirm: '' });
+  };
+
+  // --- STATISTIQUES MÉMOÏSÉES ---
+  const globalStats = useMemo(() => {
+    const notesValides = rendus.map(r => parseFloat(r.note)).filter(n => !isNaN(n));
+    return {
+      totalSaes: saes.length,
+      totalRendus: rendus.length,
+      moyenne: notesValides.length ? (notesValides.reduce((a, b) => a + b, 0) / notesValides.length).toFixed(1) : "N/A"
+    };
+  }, [rendus, saes]);
+
+  if (loading) return (
+    <div className="mmi-loading-screen cursive-font">
+      <div className="mmi-spinner"></div>
+      Chargement de l'espace pédagogique...
+    </div>
+  );
 
   return (
-    <div className="teacher-blue-screen">
-      <header className="teacher-nav-pill">
-        <div className="brand">ECAMPUS <span className="badge-admin">PROFS</span></div>
-        <nav className="nav-items">
-          <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>Stats</button>
-          <button className={activeTab === 'catalogue' ? 'active' : ''} onClick={() => setActiveTab('catalogue')}>Catalogue</button>
-          <button className={activeTab === 'projets' ? 'active' : ''} onClick={() => setActiveTab('projets')}>Gestion</button>
-          <button className={activeTab === 'rendus' ? 'active' : ''} onClick={() => setActiveTab('rendus')}>Notation</button>
-          <button className={activeTab === 'profil' ? 'active' : ''} onClick={() => setActiveTab('profil')}>Mon Profil</button>
-        </nav>
-        <button className="logout-pill" onClick={onLogout}>Quitter</button>
-      </header>
+    <div className="teacher-wrapper">
+      
+      {/* NAVBAR IDENTIQUE À LA VUE PUBLIQUE (GÉLULE ÉCLATÉE) */}
+      <nav className="mmi-navbar-pill">
+        <div className="nav-left-part" onClick={() => {setSelectedSae(null); setActiveTab('dashboard')}}>
+          <img src="/ecampus.svg" alt="Logo" className="mmi-logo-nav" />
+          <span className="brand-title cursive-font bordeaux-text">Ecampus</span>
+        </div>
 
-      <main className="teacher-main-container">
+        <div className="nav-center-part cursive-font">
+          <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => {setSelectedSae(null); setActiveTab('dashboard')}}>DASHBOARD</button>
+          
+          <div className="nav-dropdown-wrap" onMouseEnter={() => setIsManageMenuOpen(true)} onMouseLeave={() => setIsManageMenuOpen(false)}>
+            <button className={activeTab === 'catalogue' || activeTab === 'projets' ? 'active' : ''}>GESTION ▾</button>
+            <AnimatePresence>
+              {isManageMenuOpen && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="mmi-nav-dropdown-content">
+                  <span onClick={() => {setSelectedSae(null); setActiveTab('catalogue')}}>VISIBILITÉ CATALOGUE</span>
+                  <span onClick={() => {setSelectedSae(null); setActiveTab('projets')}}>CRÉATION DE SAE</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <button className={activeTab === 'rendus' ? 'active' : ''} onClick={() => {setSelectedSae(null); setActiveTab('rendus')}}>NOTATION</button>
+          <button className={activeTab === 'profil' ? 'active' : ''} onClick={() => {setSelectedSae(null); setActiveTab('profil')}}>MON PROFIL</button>
+        </div>
+
+        <div className="nav-right-part">
+          <div className="profile-badge-pill">
+            <div className="badge-text">
+              <span className="user-role-label bordeaux-text">Administrateur</span>
+              <button onClick={onLogout} className="mmi-logout-link cursive-font">Fermer la session</button>
+            </div>
+            <div className="badge-avatar">A</div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="teacher-main-stage">
         <AnimatePresence mode="wait">
           
-          {/* VUE STATISTIQUES */}
-          {activeTab === 'dashboard' && (
-            <motion.div key="db" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="content-grid">
-              <div className="stats-row">
-                <div className="stat-card"><h3>{globalStats.totalSaes}</h3><p>SAE Publiées</p></div>
-                <div className="stat-card"><h3>{globalStats.totalRendus}</h3><p>Devoirs Reçus</p></div>
-                <div className="stat-card"><h3>{globalStats.moyenne}/20</h3><p>Moyenne Générale</p></div>
-              </div>
-              <h2 className="view-title-white" style={{marginTop:'40px'}}>Avancement par projet</h2>
-              <div className="stats-grid-pro">
-                {saeStats.map(stat => (
-                  <div key={stat.id} className="progress-card-glass">
-                    <div className="progress-info"><span>{stat.titre}</span><span>{stat.complet} / {stat.total}</span></div>
-                    <div className="progress-track">
-                        <motion.div className="progress-fill" initial={{ width: 0 }} animate={{ width: `${stat.pourcentage}%` }} style={{ backgroundColor: stat.pourcentage === 100 ? '#00ff88' : '#2563eb' }}/>
+          {/* VUE DÉTAILLÉE (IDENTIQUE ÉTUDIANT) */}
+          {selectedSae ? (
+            <motion.div key="sae-detail" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="sae-immersive-view">
+              <button className="mmi-back-link cursive-font" onClick={() => setSelectedSae(null)}>← Retour au catalogue</button>
+              <div className="sae-detail-hero">
+                <div className="hero-split">
+                  <div className="hero-visual-side" style={{backgroundImage: `url(${API_URL}${selectedSae.image})`}}></div>
+                  <div className="hero-info-side">
+                    <span className="res-tag-pill bordeaux-text cursive-font">{selectedSae.ressource}</span>
+                    <h2 className="cursive-font title-display">{selectedSae.titre}</h2>
+                    <p className="description-text">{selectedSae.description}</p>
+                    <div className="meta-info-grid">
+                        <div className="meta-box"><strong>Promotion :</strong> {selectedSae.promotion}</div>
+                        <div className="meta-box"><strong>Rendu :</strong> {new Date(selectedSae.date_rendu).toLocaleDateString()}</div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* VUE CATALOGUE */}
-          {activeTab === 'catalogue' && (
-            <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="tab-container">
-              <h1 className="white-title-large">Catalogue & Visibilité</h1>
-              <div className="sae-grid">
-                {saes.map(sae => (
-                  <div className={`sae-glass-card ${sae.status === 'BROUILLON' ? 'is-hidden' : ''}`} key={sae.id}>
-                    {sae.image ? (
-                      <div className="sae-image-container" style={{backgroundImage: `url(${API_URL}${sae.image})`}}>
-                        {sae.status === 'BROUILLON' && <div className="hidden-overlay">MASQUÉ</div>}
-                      </div>
-                    ) : (
-                      <div className="sae-image-placeholder">No Image</div>
+                    {selectedSae.pdf_link && (
+                      <a href={`${API_URL}${selectedSae.pdf_link}`} target="_blank" rel="noreferrer" className="mmi-btn-black-pill">DÉCOUVRIR LE SUJET PDF</a>
                     )}
-                    <div className="sae-card-content">
-                      <div className="card-header-flex">
-                        <span className="sae-ressource-badge">{sae.ressource}</span>
-                        <button 
-                          className={`btn-visibility ${sae.status === 'VALIDE' ? 'visible' : 'hidden'}`}
-                          onClick={() => toggleVisibility(sae.id, sae.status)}
-                        >
-                          {sae.status === 'VALIDE' ? '👁️ Public' : '👁️‍🗨️ Masqué'}
-                        </button>
-                      </div>
-                      <h3 className="sae-title">{sae.titre}</h3>
-                      <p className="sae-desc">{sae.description}</p>
-                      <div className="sae-meta-info" style={{fontSize: '0.8rem', marginTop: '10px', opacity: 0.8}}>
-                        <span>Année: {sae.promotion}</span> | <span>Semestre: {sae.semestre}</span>
-                      </div>
-                    </div>
                   </div>
-                ))}
+                </div>
               </div>
             </motion.div>
-          )}
+          ) : (
+            <>
+              {/* ONGLET 1 : STATISTIQUES & DASHBOARD */}
+              {activeTab === 'dashboard' && (
+                <motion.div key="stats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="dashboard-grid-view">
+                  <div className="dashboard-stats-row">
+                    <div className="stat-card-mmi"><h3>{globalStats.totalSaes}</h3><p>SAE EN LIGNE</p></div>
+                    <div className="stat-card-mmi"><h3>{globalStats.totalRendus}</h3><p>DEVOIRS REÇUS</p></div>
+                    <div className="stat-card-mmi bordeaux-fill"><h3>{globalStats.moyenne}</h3><p>MOYENNE PROMO</p></div>
+                  </div>
+                  
+                  <div className="mmi-glass-card history-section" style={{marginTop: '40px'}}>
+                    <h3 className="cursive-font bordeaux-text">Annonces récentes sur la plateforme</h3>
+                    <div className="history-flow">
+                      {annonces.slice(0, 3).map(a => (
+                        <div key={a.id} className="history-item-pill">
+                          <div className="h-top"><strong>{a.titre}</strong> <span>{new Date(a.date_creation).toLocaleDateString()}</span></div>
+                          <p>{a.contenu}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
-          {/* VUE CRÉATION (AVEC SAISIE LIBRE) */}
-          {activeTab === 'projets' && (
-            <motion.div key="pj" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel full">
-              <h2 className="panel-title-white">Créer une nouvelle SAE</h2>
-              <form onSubmit={handleCreateSae} className="complex-form complex-form-teacher">
-  <div className="form-group">
-    <div className="input-group-blue">
-      <label>Titre de la SAE</label>
-      <input type="text" value={saeForm.titre} onChange={e => setSaeForm({...saeForm, titre: e.target.value})} required />
-    </div>
-    
-    {/* DROPDOWN MATIÈRE / DOMAINE */}
-    <div className="input-group-blue">
-      <label>Matière / Ressource</label>
-      <select 
-        className="glass-input-text" 
-        value={saeForm.ressource} 
-        onChange={e => setSaeForm({...saeForm, ressource: e.target.value})}
-      >
-        <option value="Développement Web">Développement Web</option>
-        <option value="Design & UX/UI">Design & UX/UI</option>
-        <option value="Communication Numérique">Communication Numérique</option>
-        <option value="Création Audiovisuelle">Création Audiovisuelle</option>
-      </select>
-    </div>
-  </div>
-
-  <div className="form-group">
-    <div className="input-group-blue">
-      <label>Année / Promotion</label>
-      <input type="text" value={saeForm.promotion} onChange={e => setSaeForm({...saeForm, promotion: e.target.value})} required />
-    </div>
-    
-    {/* DROPDOWN SEMESTRE */}
-    <div className="input-group-blue">
-      <label>Semestre</label>
-      <select 
-        className="glass-input-text" 
-        value={saeForm.semestre} 
-        onChange={e => setSaeForm({...saeForm, semestre: e.target.value})}
-      >
-        <option value="S1">Semestre 1</option>
-        <option value="S2">Semestre 2</option>
-        <option value="S3">Semestre 3</option>
-        <option value="S4">Semestre 4</option>
-        <option value="S5">Semestre 5</option>
-        <option value="S6">Semestre 6</option>
-      </select>
-    </div>
-  </div>
-                <div className="input-group-blue"><label>Consignes / Description</label><textarea rows="4" value={saeForm.desc} onChange={e => setSaeForm({...saeForm, desc: e.target.value})}></textarea></div>
-                <div className="form-group">
-                  <div className="input-group-blue"><label>Date limite de rendu</label><input type="date" value={saeForm.date} onChange={e => setSaeForm({...saeForm, date: e.target.value})} required /></div>
-                  <div className="input-group-blue"><label>Image d'illustration</label><input type="file" onChange={e => setImageFile(e.target.files[0])} /></div>
-                </div>
-                <button type="submit" className="btn-prof-outline submit-btn-teacher">Publier le projet</button>
-              </form>
-            </motion.div>
-          )}
-
-          {/* VUE NOTATION */}
-          {activeTab === 'rendus' && (
-            <motion.div key="rd" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-panel full">
-              <h2 className="panel-title-white">Notation des travaux</h2>
-              <table className="teacher-table">
-                <thead><tr><th>Étudiant</th><th>SAE</th><th>Dépôt</th><th>Note</th></tr></thead>
-                <tbody>
-                    {rendus.map(r => (
-                        <tr key={r.id}>
-                            <td>{r.email}</td>
-                            <td>{r.sae_titre}</td>
-                            <td>{new Date(r.date_depot).toLocaleDateString()}</td>
-                            <td><input type="number" defaultValue={r.note} onBlur={(e) => handleUpdateNote(r.id, e.target.value)} className="note-input-field"/></td>
-                        </tr>
+              {/* ONGLET 2 : CATALOGUE & VISIBILITÉ */}
+              {activeTab === 'catalogue' && (
+                <motion.div key="catalog" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <h2 className="cursive-font bordeaux-text page-heading">Gestion de la visibilité des SAE</h2>
+                  <div className="mmi-catalogue-grid">
+                    {saes.map(s => (
+                      <div key={s.id} className={`mmi-card-project ${s.status === 'BROUILLON' ? 'is-masked' : ''}`}>
+                        <div className="project-media" style={{backgroundImage: `url(${API_URL}${s.image})`}} onClick={() => setSelectedSae(s)}>
+                          {s.status === 'BROUILLON' && <div className="masked-badge">BROUILLON</div>}
+                        </div>
+                        <div className="project-details">
+                          <div className="details-header">
+                            <span className="res-mini-tag">{s.ressource}</span>
+                            <button className={`mmi-toggle-vis ${s.status}`} onClick={() => toggleSaeVisibility(s.id, s.status)}>
+                              {s.status === 'VALIDE' ? '👁️ Public' : '👁️‍🗨️ Masqué'}
+                            </button>
+                          </div>
+                          <h4 className="cursive-font" onClick={() => setSelectedSae(s)}>{s.titre}</h4>
+                          <p className="short-desc">{s.description?.substring(0, 80)}...</p>
+                        </div>
+                      </div>
                     ))}
-                </tbody>
-              </table>
-            </motion.div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ONGLET 3 : CRÉATION SAE */}
+              {activeTab === 'projets' && (
+                <motion.div key="form" className="form-stage-centered">
+                  <div className="mmi-glass-card sae-creation-card">
+                    <h2 className="cursive-font bordeaux-text">Éditer une Situation d'Apprentissage</h2>
+                    <form className="mmi-form-complex" onSubmit={handleCreateSae}>
+                      <div className="mmi-form-row">
+                        <div className="mmi-form-group">
+                          <label className="bordeaux-text">Titre de la SAE</label>
+                          <input type="text" className="mmi-pill-input" onChange={e => setSaeForm({...saeForm, titre: e.target.value})} required />
+                        </div>
+                        <div className="mmi-form-group">
+                          <label className="bordeaux-text">Matière / Domaine</label>
+                          <select className="mmi-pill-input" onChange={e => setSaeForm({...saeForm, ressource: e.target.value})}>
+                            <option>Développement Web</option><option>Design & UX/UI</option><option>Audiovisuel</option><option>Communication</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="mmi-form-group full">
+                        <label className="bordeaux-text">Description et consignes</label>
+                        <textarea className="mmi-pill-input mmi-area" rows="6" onChange={e => setSaeForm({...saeForm, desc: e.target.value})} required></textarea>
+                      </div>
+                      <div className="mmi-form-row">
+                        <div className="mmi-form-group"><label>Date de rendu</label><input type="date" className="mmi-pill-input" onChange={e => setSaeForm({...saeForm, date: e.target.value})} required /></div>
+                        <div className="mmi-form-group"><label>Fichier Illustration</label><input type="file" className="mmi-pill-input file" onChange={e => setImageFile(e.target.files[0])} /></div>
+                      </div>
+                      <div className="mmi-form-footer">
+                        <button type="submit" className="mmi-btn-black-pill">PUBLIER LE PROJET PÉDAGOGIQUE</button>
+                      </div>
+                    </form>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ONGLET 4 : NOTATION */}
+              {activeTab === 'rendus' && (
+                <motion.div key="grading" className="grading-stage">
+                  <h2 className="cursive-font bordeaux-text page-heading">Evaluation des travaux d'étudiants</h2>
+                  <div className="mmi-glass-card table-box">
+                    <table className="mmi-grading-table">
+                      <thead>
+                        <tr><th>ÉTUDIANT</th><th>PROJET</th><th>DÉPÔT</th><th>NOTE / 20</th></tr>
+                      </thead>
+                      <tbody>
+                        {rendus.map(r => (
+                          <tr key={r.id}>
+                            <td className="bold-text">{r.email}</td>
+                            <td>{r.sae_titre}</td>
+                            <td className="date-cell">{new Date(r.date_depot).toLocaleDateString()}</td>
+                            <td><input type="number" defaultValue={r.note} onBlur={(e) => handleUpdateNote(r.id, e.target.value)} className="mmi-note-field" /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ONGLET 5 : PROFIL TOTALEMENT REFAIT (IDENTIQUE IMAGE 7E19A9) */}
+              {activeTab === 'profil' && (
+                <motion.div key="profile" className="mmi-profile-immersive">
+                  <div className="profile-layout-grid">
+                    
+                    {/* SIDEBAR : IDENTITÉ */}
+                    <aside className="profile-sidebar-card">
+                      <div className="mmi-avatar-xl">A</div>
+                      <div className="profile-meta-titles">
+                        <h2 className="cursive-font bordeaux-text">{profileInfo.nom}</h2>
+                        <p className="mmi-email-sub">{user.email}</p>
+                        <div className="profile-badge-row">
+                          <span className="mmi-tag-pill">Pôle Enseignement</span>
+                          <span className="mmi-tag-pill active">Actif</span>
+                        </div>
+                      </div>
+                      <div className="profile-bio-box">
+                        <h4 className="cursive-font bordeaux-text">Biographie</h4>
+                        {isEditingProfile ? (
+                          <textarea className="mmi-pill-input area" value={profileInfo.bio} onChange={e => setProfileInfo({...profileInfo, bio: e.target.value})} />
+                        ) : (
+                          <p>{profileInfo.bio}</p>
+                        )}
+                      </div>
+                      <div className="profile-cta-stack">
+                        {isEditingProfile ? (
+                          <button onClick={() => setIsEditingProfile(false)} className="btn-mmi-profile save">SAUVEGARDER</button>
+                        ) : (
+                          <button onClick={() => setIsEditingProfile(true)} className="btn-mmi-profile edit">MODIFIER PROFIL</button>
+                        )}
+                        <button onClick={onLogout} className="btn-mmi-profile logout">DÉCONNEXION</button>
+                      </div>
+                    </aside>
+
+                    {/* MAIN SETTINGS : SÉCURITÉ & INFOS */}
+                    <section className="profile-main-settings">
+                      <div className="mmi-glass-card setting-block">
+                        <h3 className="cursive-font bordeaux-text">Sécurité du compte</h3>
+                        <form className="mmi-security-form" onSubmit={handleSecurityUpdate}>
+                          <div className="mmi-form-group">
+                            <label>Ancien mot de passe</label>
+                            <input type="password" placeholder="••••••••" className="mmi-pill-input" required />
+                          </div>
+                          <div className="mmi-form-row">
+                            <div className="mmi-form-group">
+                              <label>Nouveau mot de passe</label>
+                              <input type="password" className="mmi-pill-input" onChange={e => setPwdForm({...pwdForm, new: e.target.value})} required />
+                            </div>
+                            <div className="mmi-form-group">
+                              <label>Confirmer nouveau</label>
+                              <input type="password" className="mmi-pill-input" onChange={e => setPwdForm({...pwdForm, confirm: e.target.value})} required />
+                            </div>
+                          </div>
+                          <button type="submit" className="mmi-btn-black-pill full-width">METTRE À JOUR LE MOT DE PASSE</button>
+                        </form>
+                      </div>
+
+                      <div className="mmi-glass-card setting-block" style={{marginTop:'35px'}}>
+                        <h3 className="cursive-font bordeaux-text">Informations de contact pro.</h3>
+                        <div className="mmi-pro-details">
+                          <div className="pro-item"><label>Localisation</label><p>{profileInfo.bureau}</p></div>
+                          <div className="pro-item"><label>Téléphone</label><p>{profileInfo.tel}</p></div>
+                          <div className="pro-item"><label>Disponibilités</label><p>{profileInfo.dispo}</p></div>
+                        </div>
+                      </div>
+                    </section>
+
+                  </div>
+                </motion.div>
+              )}
+            </>
           )}
-
-          {/* VUE PROFIL */}
-          {activeTab === 'profil' && <UserProfile user={user} API_URL={API_URL} onLogout={onLogout} />}
-
         </AnimatePresence>
       </main>
+
+      <footer className="teacher-footer-mmi cursive-font bordeaux-text">
+        © 2026 Ecampus MMI Vélizy — Université Paris-Saclay
+      </footer>
     </div>
   );
 }

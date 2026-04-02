@@ -1,397 +1,113 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
-/* --- RÉINITIALISATION & BASE --- */
-body, html {
-  margin: 0;
-  padding: 0;
-  font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
-  background: #1e3a8a; /* Couleur de secours sombre */
-  color: white;
+/* --- CONFIGURATION GLOBALE --- */
+.teacher-wrapper {
+    min-height: 100vh;
+    background-color: #fff9f0; /* Fond Crème DA */
+    padding: 20px 40px;
+    color: #1a1a1a;
+    font-family: 'Neulis Alt', sans-serif;
 }
 
-* {
-  box-sizing: border-box;
+.bordeaux-text { color: #a31d24 !important; }
+.cursive-font { font-family: 'Neulis Cursive', cursive !important; }
+
+/* --- NAVBAR GÉLULE (Identique Public) --- */
+.mmi-navbar-pill {
+    background: #ffffff;
+    border-radius: 100px;
+    height: 85px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 45px;
+    box-shadow: 0 10px 40px rgba(163, 29, 36, 0.04);
+    margin-bottom: 50px;
+    border: 1px solid rgba(163, 29, 36, 0.08);
 }
 
-/* --- LAYOUTS GÉNÉRAUX (DÉGRADÉ BLEU) --- */
-.login-blue-bg, 
-.public-wrapper, 
-.student-blue-layout,
-.teacher-blue-screen {
-  min-height: 100vh;
-  width: 100vw;
-  background: radial-gradient(circle at top right, #4facfe, #00f2fe, #1e3a8a);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
+.nav-left-part { display: flex; align-items: center; gap: 15px; cursor: pointer; }
+.mmi-logo-nav { height: 45px; }
+.brand-title { font-size: 1.7rem; font-weight: 800; }
+
+.nav-center-part { display: flex; gap: 30px; }
+.nav-center-part button {
+    background: none; border: none; font-size: 1rem; color: #888;
+    cursor: pointer; font-weight: 700; transition: 0.3s;
+    position: relative; padding: 10px 0;
+}
+.nav-center-part button.active { color: #a31d24; }
+.nav-center-part button.active::after {
+    content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: #a31d24; border-radius: 5px;
 }
 
-/* --- SYSTÈME DE CONNEXION (CENTRAGE ABSOLU) --- */
-.login-blue-bg {
-  justify-content: center; /* Centre la carte verticalement et horizontalement */
+.nav-dropdown-wrap { position: relative; }
+.mmi-nav-dropdown-content {
+    position: absolute; top: 50px; left: 0; background: white;
+    border-radius: 20px; padding: 18px; box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    display: flex; flex-direction: column; gap: 12px; z-index: 100; min-width: 190px;
 }
+.mmi-nav-dropdown-content span { color: #a31d24; font-weight: 800; font-size: 0.9rem; cursor: pointer; }
 
-.login-carousel-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
-  width: 100%;
-  max-width: 900px;
-  z-index: 2;
-}
+.profile-badge-pill { display: flex; align-items: center; gap: 18px; border-left: 1px solid #eee; padding-left: 25px; }
+.badge-text { display: flex; flex-direction: column; text-align: right; }
+.user-role-label { font-weight: 900; font-size: 0.9rem; }
+.mmi-logout-link { background: none; border: none; color: #999; font-size: 0.75rem; text-decoration: underline; cursor: pointer; padding: 0; }
+.badge-avatar { width: 42px; height: 42px; border-radius: 50%; background: #fdf2f2; color: #a31d24; display: flex; align-items: center; justify-content: center; font-weight: 900; border: 1.5px solid #eee; }
 
-.login-form-blue {
-  width: 420px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  padding: 50px 40px;
-  border-radius: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-  text-align: center;
-}
+/* --- VUE IMMERSIVE SAE (Style Étudiant) --- */
+.mmi-back-link { background: none; border: none; color: #a31d24; font-size: 1.1rem; cursor: pointer; margin-bottom: 25px; }
+.sae-detail-hero { background: white; border-radius: 45px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.04); }
+.hero-split { display: flex; min-height: 500px; }
+.hero-visual-side { width: 550px; background-size: cover; background-position: center; }
+.hero-info-side { padding: 55px; flex: 1; }
+.title-display { font-size: 3.8rem; margin: 20px 0; color: #1a1a1a; line-height: 1.1; }
+.description-text { line-height: 1.8; color: #444; font-size: 1.15rem; margin-bottom: 35px; }
+.meta-info-grid { display: flex; gap: 25px; margin-bottom: 45px; }
+.meta-box { background: #fff9f0; padding: 12px 25px; border-radius: 15px; font-size: 0.95rem; border: 1px solid #ffefe0; }
 
-.role-title-display {
-  font-size: 1.8rem;
-  font-weight: 900;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-}
+.mmi-btn-black-pill { background: #000; color: #fff; text-decoration: none; padding: 20px 45px; border-radius: 100px; font-weight: 900; display: inline-block; transition: 0.3s; border: none; cursor: pointer; }
+.mmi-btn-black-pill:hover { transform: scale(1.05); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 
-/* --- NAVBARS STYLE "PILL" (GÉLULE) --- */
-.public-header-pill, 
-.pill-header,
-.teacher-nav-pill {
-  position: fixed;
-  top: 20px;
-  width: 90%;
-  max-width: 1100px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  padding: 12px 40px;
-  border-radius: 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
+/* --- PROFIL IMMERSIF (Image 7E19A9) --- */
+.profile-layout-grid { display: grid; grid-template-columns: 380px 1fr; gap: 50px; }
+.profile-sidebar-card { background: #fff; border-radius: 45px; padding: 50px; text-align: center; box-shadow: 0 5px 30px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; }
+.mmi-avatar-xl { width: 140px; height: 140px; border-radius: 50%; background: linear-gradient(135deg, #fdf2f2, #fff); color: #a31d24; font-size: 4rem; font-weight: 900; display: flex; align-items: center; justify-content: center; margin: 0 auto 35px; border: 5px solid #fff9f0; box-shadow: 0 15px 30px rgba(163, 29, 36, 0.12); }
 
-.header-nav-white button, .nav-items button {
-  background: none;
-  border: none;
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 600;
-  cursor: pointer;
-  padding: 8px 15px;
-  transition: 0.3s;
-}
+.mmi-email-sub { color: #888; margin-bottom: 25px; font-size: 1.05rem; }
+.profile-badge-row { display: flex; justify-content: center; gap: 12px; margin-bottom: 40px; }
+.mmi-tag-pill { background: #f5f5f5; padding: 7px 18px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; color: #777; }
+.mmi-tag-pill.active { background: #e6ffed; color: #1e7e34; }
 
-.header-nav-white button.active, .nav-items button.active {
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-}
+.profile-bio-box { text-align: left; margin: 35px 0; border-top: 1px solid #f5f5f5; padding-top: 30px; }
+.profile-bio-box p { font-size: 1.05rem; line-height: 1.7; color: #555; }
 
-/* --- GRILLES ET CARTES (SAE) --- */
-.public-main, .student-content-centered, .teacher-main-container {
-  margin-top: 140px;
-  width: 90%;
-  max-width: 1200px;
-}
+.btn-mmi-profile { width: 100%; padding: 16px; border-radius: 16px; border: 2px solid #eee; font-weight: 900; cursor: pointer; margin-bottom: 15px; transition: 0.3s; background: transparent; }
+.btn-mmi-profile.save { background: #a31d24; color: white; border-color: #a31d24; }
+.btn-mmi-profile.logout { color: #a31d24; border-color: #a31d24; }
 
-.sae-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 30px;
-  padding-bottom: 50px;
-}
+.setting-block { background: white; border-radius: 45px; padding: 50px; }
+.mmi-pro-details { display: flex; flex-wrap: wrap; gap: 40px; margin-top: 30px; }
+.pro-item label { display: block; color: #a31d24; font-weight: 900; font-size: 0.85rem; margin-bottom: 10px; }
+.pro-item p { font-weight: 700; font-size: 1.15rem; }
 
-.sae-glass-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
-  border-radius: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  overflow: hidden;
-  transition: all 0.3s;
-}
+/* --- FORMULAIRES & CATALOGUE --- */
+.mmi-glass-card { background: white; border-radius: 40px; padding: 50px; border: 1px solid #f0f0f0; }
+.mmi-pill-input { width: 100%; border: 2px solid #eee; border-radius: 100px; padding: 18px 30px; font-size: 1.1rem; outline: none; margin-top: 15px; background: #fff; transition: 0.3s; }
+.mmi-pill-input:focus { border-color: #a31d24; box-shadow: 0 0 15px rgba(163, 29, 36, 0.05); }
 
-.sae-glass-card:hover {
-  transform: translateY(-5px);
-  border-color: white;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
+.mmi-catalogue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 35px; }
+.mmi-card-project { background: #fff; border-radius: 35px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.02); transition: 0.3s; border: 1px solid #f0f0f0; }
+.project-media { height: 200px; background-size: cover; background-position: center; cursor: pointer; position: relative; }
+.masked-badge { position: absolute; inset: 0; background: rgba(0,0,0,0.55); color: white; display: flex; align-items: center; justify-content: center; font-weight: 900; letter-spacing: 1px; }
 
-.sae-image-container {
-  height: 180px;
-  background-size: cover;
-  background-position: center;
-  background-color: rgba(0, 0, 0, 0.1);
-}
+/* --- STATS --- */
+.dashboard-stats-row { display: flex; gap: 35px; }
+.stat-card-mmi { flex: 1; background: white; padding: 50px; border-radius: 45px; text-align: center; border: 1px solid #f0f0f0; }
+.stat-card-mmi h3 { font-size: 4.5rem; color: #a31d24; margin: 0; line-height: 1; }
+.stat-card-mmi.bordeaux-fill { background: #a31d24; }
+.stat-card-mmi.bordeaux-fill h3, .stat-card-mmi.bordeaux-fill p { color: white; }
 
-.sae-ressource-badge {
-  background: #ffcc00;
-  color: black;
-  padding: 4px 12px;
-  border-radius: 15px;
-  font-size: 0.75rem;
-  font-weight: 800;
-}
+.mmi-grading-table { width: 100%; border-collapse: collapse; }
+.mmi-grading-table th { text-align: left; padding: 25px; color: #a31d24; border-bottom: 3.5px solid #fff9f0; font-size: 1rem; }
+.mmi-grading-table td { padding: 25px; border-bottom: 1.5px solid #fff9f0; font-size: 1.1rem; }
 
-/* --- ESPACE DÉPÔT (DRAG & DROP) --- */
-.sae-detail-container {
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 30px;
-  margin-top: 20px;
-}
-
-.drag-drop-zone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 2px dashed rgba(255, 255, 255, 0.4);
-  border-radius: 20px;
-  padding: 40px;
-  background: rgba(255, 255, 255, 0.05);
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.drag-drop-zone:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: white;
-}
-
-/* --- BOUTONS & INPUTS STYLE PILULE --- */
-.input-group-blue input, .glass-input-text {
-  width: 100%;
-  padding: 16px 25px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 50px;
-  color: white;
-  outline: none;
-}
-
-.btn-blue-outline, .btn-connexion-pill {
-  padding: 15px 30px;
-  background: white;
-  color: #1e3a8a;
-  border: none;
-  border-radius: 50px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.btn-confirm-deposit {
-  width: 100%;
-  background: #111; /* Style noir comme sur l'image fc67e7 */
-  color: white;
-  border: none;
-  padding: 15px;
-  border-radius: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  margin-top: 20px;
-}
-
-/* --- HISTORIQUE & BADGES --- */
-.history-card-glass {
-  background: rgba(255, 255, 255, 0.15);
-  border-left: 5px solid #34c759; /* Vert pour les travaux rendus */
-  padding: 25px;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-}
-
-.badge-rendu-green {
-  background: #e2f9e9;
-  color: #1a7f37;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  font-weight: bold;
-}
-
-.urgent-border {
-  border-left: 5px solid #ff3b30 !important; /* Bordure rouge pour les délais proches */
-}
-
-/* --- RESPONSIVE --- */
-@media (max-width: 1024px) {
-  .sae-detail-container {
-    grid-template-columns: 1fr;
-  }
-  .login-carousel-wrapper {
-    flex-direction: column;
-    gap: 20px;
-  }
-}
-
-.stats-grid-pro {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 25px;
-  margin-top: 20px;
-}
-
-.progress-card-glass {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
-  padding: 25px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
-  font-weight: 700;
-}
-
-.progress-track {
-  height: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 10px;
-}
-
-.progress-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.8rem;
-  opacity: 0.8;
-}
-
-.btn-detail-small {
-  background: white;
-  color: #1e3a8a;
-  border: none;
-  padding: 5px 12px;
-  border-radius: 15px;
-  cursor: pointer;
-  font-weight: 800;
-}
-
-.card-header-flex {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.btn-visibility {
-  border: none;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.btn-visibility.visible { background: #34c759; color: white; }
-.btn-visibility.hidden { background: #ff3b30; color: white; }
-
-.is-hidden { opacity: 0.6; filter: grayscale(0.5); }
-
-.hidden-overlay {
-  background: rgba(255, 59, 48, 0.8);
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  letter-spacing: 2px;
-}
-
-/* Style spécifique pour les select afin qu'ils ressemblent aux inputs */
-.input-group-blue select {
-  width: 100%;
-  padding: 16px 25px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 50px;
-  color: white;
-  outline: none;
-  cursor: pointer;
-  appearance: none; /* Supprime la flèche par défaut du navigateur */
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 20px center;
-  background-size: 15px;
-}
-
-/* Style des options pour la lisibilité */
-.input-group-blue select option {
-  background: #1e3a8a; /* Couleur sombre pour contraster avec le texte blanc */
-  color: white;
-}
-
-
-/* Conteneur de la messagerie */
-.chat-container {
-  display: flex;
-  flex-direction: column;
-  height: 500px;
-  gap: 15px;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-/* Bulles de message style iOS */
-.message-bubble {
-  max-width: 70%;
-  padding: 12px 18px;
-  border-radius: 20px;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  position: relative;
-  backdrop-filter: blur(10px); /* Effet flou iOS */
-}
-
-/* Message reçu (Gris/Blanc translucide) */
-.message-received {
-  align-self: flex-start;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  border-bottom-left-radius: 4px; /* "Pointe" de la bulle iOS */
-}
-
-/* Message envoyé (Bleu dégradé iPhone) */
-.message-sent {
-  align-self: flex-end;
-  background: linear-gradient(135deg, #007aff 0%, #00c6ff 100%);
-  color: white;
-  border-bottom-right-radius: 4px;
-  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
-}
-
-/* Indicateur de modération (Admin) */
-.message-moderated {
-  opacity: 0.6;
-  font-style: italic;
-  background: rgba(255, 59, 48, 0.2) !important;
-  border: 1px dashed #ff3b30 !important;
-}
+.teacher-footer-mmi { text-align: center; padding: 80px; border-top: 1px solid #eee; margin-top: 120px; opacity: 0.5; }

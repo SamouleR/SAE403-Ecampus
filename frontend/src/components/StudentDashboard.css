@@ -1,375 +1,81 @@
-/* --- BASE ET MISE EN PAGE --- */
-.student-blue-layout {
+/* --- CONFIGURATION GLOBALE --- */
+.student-mmi-wrapper {
   min-height: 100vh;
-  background: linear-gradient(145deg, #4facfe 0%, #00f2fe 100%);
-  padding: 30px 50px;
-  font-family: 'Inter', sans-serif;
-  color: white;
+  background-color: #fff9f0; /* Fond Crème DA */
+  padding: 20px 45px;
+  font-family: 'Neulis Alt', sans-serif;
+  color: #1a1a1a;
 }
 
-.student-content-centered {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-top: 10px;
-}
+.bordeaux-text { color: #a31d24 !important; }
+.cursive-font { font-family: 'Neulis Cursive', cursive !important; }
 
-/* --- HEADER STYLE "PILULE" --- */
-.pill-header {
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 50px;
+/* --- HEADER GÉLULE FLOTTANTE --- */
+.mmi-pill-header {
+  background: #ffffff;
+  border-radius: 100px;
+  height: 85px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 40px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  padding: 0 45px;
+  box-shadow: 0 10px 35px rgba(163, 29, 36, 0.04);
   margin-bottom: 50px;
+  border: 1px solid rgba(163, 29, 36, 0.08);
 }
 
-.header-nav-white { display: flex; align-items: center; gap: 40px; }
-.header-logo-text { font-size: 1.2rem; font-weight: 800; color: #4facfe; letter-spacing: 1px; }
+.nav-left { display: flex; align-items: center; gap: 15px; cursor: pointer; }
+.mmi-logo-img { height: 45px; }
+.brand-name { font-size: 1.7rem; font-weight: 800; }
 
-.header-nav-white button {
-  background: none;
-  border: none;
-  font-size: 1.1rem;
-  color: #a0a0a0;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.2s;
+.nav-center { display: flex; gap: 25px; }
+.nav-center button {
+  background: none; border: none; font-size: 0.95rem; color: #888;
+  font-weight: 700; cursor: pointer; padding: 10px 0; transition: 0.3s;
 }
+.nav-center button.active { color: #a31d24; border-bottom: 3px solid #a31d24; }
 
-.header-nav-white button.active, 
-.header-nav-white button:hover { 
-  color: #4facfe; 
+/* --- SAE CARDS & GRIDS --- */
+.mmi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 35px; }
+
+.mmi-sae-card {
+  background: white; border-radius: 35px; overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.02); border: 1px solid #f2f2f2;
+  transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer;
 }
+.mmi-sae-card:hover { transform: translateY(-10px); box-shadow: 0 15px 35px rgba(163, 29, 36, 0.08); border-color: #a31d24; }
 
-/* --- ACTIONS UTILISATEUR --- */
-.header-actions { display: flex; align-items: center; gap: 20px; color: black; font-size: 1.2rem; }
+.card-media { height: 190px; background-size: cover; background-position: center; position: relative; }
+.res-tag { position: absolute; top: 15px; left: 15px; background: white; color: #a31d24; padding: 5px 15px; border-radius: 20px; font-weight: 900; font-size: 0.75rem; }
+.card-body { padding: 30px; }
 
-.user-profile-pill {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-left: 2px solid #ddd;
-  padding-left: 20px;
+/* --- WHATSAPP STYLE MESSAGERIE --- */
+.mmi-whatsapp-layout {
+  display: flex; height: 75vh; background: white; border-radius: 40px;
+  overflow: hidden; border: 1px solid #eee; box-shadow: 0 20px 60px rgba(0,0,0,0.05);
 }
+.sidebar-contacts { width: 320px; border-right: 1px solid #f0f0f0; background: #fafafa; }
+.contact-pill { display: flex; gap: 15px; padding: 20px; cursor: pointer; border-bottom: 1px solid #f5f5f5; }
+.contact-pill.active { background: white; border-left: 5px solid #a31d24; }
+.contact-pill .avatar { width: 45px; height: 45px; border-radius: 50%; background: #fdf2f2; color: #a31d24; display: flex; align-items: center; justify-content: center; font-weight: 900; }
 
-.user-info-text { display: flex; flex-direction: column; }
-.role-bold { font-weight: 800; font-size: 0.9rem; color: black; }
+.chat-window { flex: 1; display: flex; flex-direction: column; background: #fff9f0; }
+.chat-flow { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.msg-bubble { max-width: 65%; padding: 12px 18px; border-radius: 20px; position: relative; font-size: 0.95rem; line-height: 1.4; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+.msg-bubble.sent { align-self: flex-end; background: #a31d24; color: white; border-bottom-right-radius: 2px; }
+.msg-bubble.received { align-self: flex-start; background: white; border-bottom-left-radius: 2px; }
 
-.user-info-text button {
-  background: none;
-  border: none;
-  font-size: 0.6rem;
-  color: #666;
-  cursor: pointer;
-  text-align: left;
-  padding: 0;
-}
+/* --- PROFILE --- */
+.mmi-profile-container { display: grid; grid-template-columns: 380px 1fr; gap: 40px; }
+.mmi-profile-sidebar { background: white; padding: 50px; border-radius: 45px; text-align: center; border: 1px solid #f0f0f0; }
+.avatar-xl { width: 140px; height: 140px; border-radius: 50%; background: linear-gradient(135deg, #fdf2f2, #fff); color: #a31d24; font-size: 4rem; font-weight: 900; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; border: 5px solid #fff9f0; }
 
-/* --- TITRES ET FILTRES --- */
-.white-title-large {
-  font-size: 3rem;
-  font-weight: 900;
-  margin: 0 0 5px 0;
-  text-shadow: 0px 4px 15px rgba(0,0,0,0.1);
-}
+/* --- INPUTS & BUTTONS --- */
+.mmi-select-pill { padding: 10px 25px; border-radius: 50px; border: 2px solid #a31d24; background: white; color: #a31d24; font-weight: 800; cursor: pointer; }
+.mmi-pill-input { width: 100%; border: 2px solid #eee; border-radius: 100px; padding: 18px 30px; font-size: 1.05rem; outline: none; transition: 0.3s; background: #fff; margin-bottom: 20px; }
+.mmi-btn-black-pill { background: #000; color: white; border: none; padding: 18px 45px; border-radius: 100px; font-weight: 900; cursor: pointer; transition: 0.3s; }
+.mmi-btn-black-pill:hover { transform: scale(1.03); background: #222; }
 
-.title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 40px;
-}
-
-.glass-select {
-  background: rgba(255,255,255,0.2);
-  border: 2px solid white;
-  color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
-  font-size: 1rem;
-  outline: none;
-  cursor: pointer;
-  backdrop-filter: blur(5px);
-}
-
-.glass-select option { color: black; }
-
-/* --- GRILLE ET CARTES SAE (GLASSMORPHISM) --- */
-.sae-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 30px;
-}
-
-.sae-glass-card {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s, box-shadow 0.3s;
-  backdrop-filter: blur(10px);
-  position: relative;
-}
-
-.sae-glass-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0, 242, 254, 0.3);
-  border-color: white;
-}
-
-/* --- SYSTÈME D'URGENCE ET ANIMATIONS --- */
-@keyframes pulse-orange {
-  0% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.4); border-color: rgba(255, 165, 0, 0.4); }
-  70% { box-shadow: 0 0 0 15px rgba(255, 165, 0, 0); border-color: rgba(255, 165, 0, 1); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0); border-color: rgba(255, 165, 0, 0.4); }
-}
-
-.urgent-pulse {
-  animation: pulse-orange 2s infinite;
-  border: 2px solid #ff9500 !important;
-}
-
-.status-badge {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.status-badge.orange { background: #ff9500; color: white; }
-.status-badge.green { background: #34c759; color: white; }
-.status-badge.red { background: #ff3b30; color: white; }
-.status-badge.blue { background: #007aff; color: white; }
-
-/* --- CONTENU DES CARTES --- */
-.sae-image-container {
-  height: 160px;
-  background-size: cover;
-  background-position: center;
-  border-bottom: 2px solid rgba(255,255,255,0.2);
-}
-
-.sae-card-content { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
-.sae-ressource-badge { align-self: flex-start; background: white; color: #4facfe; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; margin-bottom: 12px; }
-.sae-title { font-size: 1.3rem; margin: 0 0 10px 0; font-weight: 800; }
-
-.mini-progress-bar {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-  margin-top: 15px;
-  overflow: hidden;
-}
-
-.mini-progress-bar .fill {
-  height: 100%;
-  background: white;
-  transition: width 0.5s ease;
-}
-
-/* --- ESPACE DE RENDU --- */
-.submission-glass-card {
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid white;
-  border-radius: 20px;
-  padding: 40px;
-  margin-bottom: 40px;
-  backdrop-filter: blur(10px);
-}
-
-.status-table {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(255,255,255,0.4);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-top: 30px;
-}
-
-.status-row {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  padding: 15px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.05);
-}
-
-/* --- NOTIFICATIONS --- */
-.notifs-panel {
-  position: absolute;
-  top: 50px;
-  right: -20px;
-  background: white;
-  color: #333;
-  width: 380px;
-  border-radius: 8px;
-  box-shadow: 0px 10px 30px rgba(0,0,0,0.2);
-  border: 1px solid #dcdcdc;
-  z-index: 999;
-}
-
-.notif-item {
-  background: #fcfcfc;
-  border: 1px solid #eaeaea;
-  padding: 12px 15px;
-  margin-bottom: 8px;
-  border-left: 4px solid #4facfe;
-}
-
-
-/* Conteneur de la messagerie */
-.chat-container {
-  display: flex;
-  flex-direction: column;
-  height: 500px;
-  gap: 15px;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-/* Bulles de message style iOS */
-.message-bubble {
-  max-width: 70%;
-  padding: 12px 18px;
-  border-radius: 20px;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  position: relative;
-  backdrop-filter: blur(10px); /* Effet flou iOS */
-}
-
-/* Message reçu (Gris/Blanc translucide) */
-.message-received {
-  align-self: flex-start;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  border-bottom-left-radius: 4px; /* "Pointe" de la bulle iOS */
-}
-
-/* Message envoyé (Bleu dégradé iPhone) */
-.message-sent {
-  align-self: flex-end;
-  background: linear-gradient(135deg, #007aff 0%, #00c6ff 100%);
-  color: white;
-  border-bottom-right-radius: 4px;
-  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
-}
-
-/* Indicateur de modération (Admin) */
-.message-moderated {
-  opacity: 0.6;
-  font-style: italic;
-  background: rgba(255, 59, 48, 0.2) !important;
-  border: 1px dashed #ff3b30 !important;
-}
-/* --- CONTAINER WHATSAPP STYLE --- */
-.messagerie-container {
-  display: flex;
-  height: 80vh;
-  background: #f0f2f5; /* Gris clair WhatsApp */
-  border-radius: 0; /* WhatsApp Desktop est souvent plein écran */
-  overflow: hidden;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-  margin-top: 20px;
-}
-
-/* --- SIDEBAR GAUCHE --- */
-.contacts-panel {
-  width: 30%;
-  background: white;
-  border-right: 1px solid #ddd;
-  display: flex;
-  flex-direction: column;
-}
-
-.contacts-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.contact-item {
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  border-bottom: 1px solid #f2f2f2;
-  cursor: pointer;
-  color: #111;
-  transition: 0.2s;
-}
-
-.contact-item:hover { background: #f5f6f6; }
-.contact-item.active { background: #ebebeb; }
-
-/* --- ZONE DE CHAT --- */
-.chat-panel {
-  width: 70%;
-  display: flex;
-  flex-direction: column;
-  background: #e5ddd5; /* Couleur fond chat WhatsApp */
-  position: relative;
-}
-
-.chat-container {
-  flex: 1;
-  padding: 20px 40px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* BULLES STYLE WHATSAPP */
-.message-bubble {
-  max-width: 65%;
-  padding: 8px 12px;
-  font-size: 0.9rem;
-  border-radius: 8px;
-  position: relative;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-}
-
-.message-sent {
-  align-self: flex-end;
-  background: #dcf8c6; /* Vert WhatsApp */
-  color: #303030;
-  border-top-right-radius: 0;
-}
-
-.message-received {
-  align-self: flex-start;
-  background: white;
-  color: #303030;
-  border-top-left-radius: 0;
-}
-
-.msg-date {
-  font-size: 0.65rem;
-  color: #999;
-  display: block;
-  text-align: right;
-  margin-top: 4px;
-}
-
-/* INPUT WHATSAPP */
-.chat-input-area {
-  background: #f0f2f5;
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.chat-input-area input {
-  flex: 1;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 20px;
-  outline: none;
-}
+/* --- VITRINE MODAL --- */
+.mmi-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 40px; }
+.mmi-gallery-container { background: #fff9f0; width: 100%; max-width: 1200px; height: 85vh; border-radius: 50px; padding: 60px; overflow-y: auto; }

@@ -1,0 +1,90 @@
+/* --- CONFIGURATION REGISTER --- */
+
+.register-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 50px;
+}
+
+.register-inline-logo {
+  height: 65px;
+  width: auto;
+  vertical-align: middle;
+}
+
+/* Alignement strict des colonnes */
+.register-form-aligned .maquette-label {
+  width: 280px; /* Largeur fixe pour que tous les inputs commencent au même endroit */
+  text-align: left;
+  font-size: 1.1rem;
+}
+
+.register-form-aligned .maquette-input {
+  width: 320px;
+  background-color: white;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+/* Espaceur pour compenser la largeur du bouton noir sur les lignes du haut */
+.register-btn-spacer {
+  width: 150px; 
+}
+
+.btn-register-action {
+  width: 150px !important;
+  font-size: 0.9rem !important;
+  letter-spacing: 1px;
+  padding: 12px 0 !important;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 850px) {
+  .register-hero {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .register-inline-logo {
+    height: 45px;
+  }
+
+  .register-form-aligned .maquette-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .register-form-aligned .maquette-label {
+    width: 100%;
+    text-align: center;
+  }
+
+  .register-form-aligned .maquette-input {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .register-btn-spacer {
+    display: none;
+  }
+
+  .btn-register-action {
+    width: 100% !important;
+    max-width: 320px;
+  }
+}
+
+/* --- FOOTER SPECIFIQUE --- */
+.maquette-footer {
+  margin-top: 50px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  align-items: center;
+}
+
+.dark-text {
+  color: #333;
+}
