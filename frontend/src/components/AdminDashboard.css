@@ -28,16 +28,16 @@
    2. HEADER GÉLULE (STYLE PUBLIC)
    ========================================================================== */
 .mmi-pill-header {
-    background: var(--mmi-white);
+    background: transparent;
     border-radius: 100px;
     height: 85px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 45px;
-    box-shadow: var(--mmi-shadow);
+    box-shadow: none;
     margin-bottom: 50px;
-    border: 1px solid var(--mmi-border);
+    border: 1px solid rgba(163, 29, 36, 0.08);
     position: sticky;
     top: 20px;
     z-index: 1000;
@@ -66,6 +66,7 @@
     transition: all 0.3s ease;
     position: relative;
     padding: 10px 0;
+    text-transform: lowercase;
 }
 
 .mmi-nav-links button:hover { color: var(--mmi-bordeaux); }
@@ -122,6 +123,45 @@
     border-bottom: 1px solid #f0f0f0;
     padding: 12px 0;
 }
+
+.mmi-history-list { display: grid; gap: 18px; }
+.mmi-history-item {
+    background: #faf7f4;
+    border: 1px solid #f2e7e4;
+    border-radius: 22px;
+    padding: 22px;
+}
+
+.h-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+.h-btns { display: flex; gap: 10px; }
+.h-btns button {
+    background: rgba(163, 29, 36, 0.06);
+    border: 1px solid rgba(163, 29, 36, 0.18);
+    color: var(--mmi-bordeaux);
+    border-radius: 12px;
+    width: 42px;
+    height: 42px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.h-btns button:hover {
+    background: var(--mmi-bordeaux);
+    color: white;
+}
+
+.mmi-history-item p {
+    margin: 0;
+    line-height: 1.7;
+    color: #4b4b4b;
+}
 .mmi-notif-item strong { display: block; font-size: 0.9rem; color: var(--mmi-bordeaux); }
 .mmi-notif-item p { font-size: 0.8rem; margin: 5px 0 0; color: #555; }
 
@@ -166,6 +206,61 @@
    ========================================================================== */
 .mmi-admin-main { max-width: 1280px; margin: 0 auto; }
 .mmi-stage-title { font-size: 2.6rem; font-weight: 900; margin-bottom: 35px; letter-spacing: -1px; }
+
+.dashboard-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.dashboard-card {
+  background: white;
+  border-radius: 25px;
+  border: 1px solid #f2f2f2;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+  padding: 25px;
+  text-align: center;
+}
+
+.dashboard-card-large {
+  grid-column: span 2;
+  background: #a31d24;
+  color: white;
+  border: 1px solid #a31d24;
+}
+
+.dashboard-value {
+  display: block;
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.dashboard-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.annonces-card-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.annonce-item {
+  padding: 12px 15px;
+  border: 1px solid #f1f1f1;
+  border-radius: 17px;
+  background: #fff;
+}
+
+.annonce-item strong { color: #a31d24; }
+.annonce-item small { color: #666; font-size: 0.8rem; margin-left: 8px; }
+.annonce-item p { margin: 6px 0 0; color: #444; }
 
 .mmi-glass-card {
     background: var(--mmi-white);

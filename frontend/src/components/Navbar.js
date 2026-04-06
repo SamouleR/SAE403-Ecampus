@@ -8,9 +8,9 @@ const Navbar = () => {
 
     return (
         <nav className="main-nav">
-            <div className="nav-left"><strong>ECAMPUS</strong> | {user.nom}</div>
+            <div className="nav-left"><strong>Ecampus</strong> | {user.nom}</div>
             <div className="nav-right">
-                <button onClick={() => authService.logout()} className="logout-btn">Déconnexion</button>
+                <button onClick={() => authService.logout()} className="logout-btn">déconnexion</button>
             </div>
         </nav>
     );

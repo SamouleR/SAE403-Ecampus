@@ -14,7 +14,7 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
   // --------------------------------------------------------------------------
   // --- 1. ÉTATS DE NAVIGATION ET UI ---
   // --------------------------------------------------------------------------
-  const [activeTab, setActiveTab] = useState('catalogue');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [showAnnonces, setShowAnnonces] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [globalError, setGlobalError] = useState(null);
@@ -27,6 +27,7 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [students, setStudents] = useState([]);
   const [annonces, setAnnonces] = useState([]);
+  const [allRendus, setAllRendus] = useState([]);
   
   // États spécifiques à la Vitrine
   const [selectedSaeRendus, setSelectedSaeRendus] = useState([]);
@@ -70,23 +71,38 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     setGlobalError(null);
     const headers = { 'Authorization': `Bearer ${token}` };
 
+    const safeFetchJson = async (url, defaultValue = []) => {
+      try {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+          console.warn(`API indisponible: ${url} (${response.status})`);
+          return defaultValue;
+        }
+        return await response.json();
+      } catch (error) {
+        console.warn(`Échec requête ${url}:`, error);
+        return defaultValue;
+      }
+    };
+
     try {
-      const [resSaes, resPending, resStudents, resAnnonces] = await Promise.all([
-        fetch(`${API_URL}/api/admin/all-saes`, { headers }),
-        fetch(`${API_URL}/api/admin/pending-users`, { headers }),
-        fetch(`${API_URL}/api/admin/etudiants`, { headers }),
-        fetch(`${API_URL}/api/annonces`, { headers })
+      const [saesData, pendingData, studentsData, annoncesData, rendusData] = await Promise.all([
+        safeFetchJson(`${API_URL}/api/admin/all-saes`, []),
+        safeFetchJson(`${API_URL}/api/admin/pending-users`, []),
+        safeFetchJson(`${API_URL}/api/admin/etudiants`, []),
+        safeFetchJson(`${API_URL}/api/annonces`, []),
+        safeFetchJson(`${API_URL}/api/admin/rendus`, [])
       ]);
 
-      if (!resSaes.ok || !resPending.ok || !resStudents.ok || !resAnnonces.ok) {
-        throw new Error("Une ou plusieurs ressources sont indisponibles.");
+      setAllSaes(saesData);
+      setPendingUsers(pendingData);
+      setStudents(studentsData);
+      setAnnonces(annoncesData);
+      setAllRendus(rendusData);
+
+      if (saesData.length === 0 && pendingData.length === 0 && studentsData.length === 0 && annoncesData.length === 0 && rendusData.length === 0) {
+        setGlobalError("Problème de connexion avec l'API Ecampus.");
       }
-
-      setAllSaes(await resSaes.json());
-      setPendingUsers(await resPending.json());
-      setStudents(await resStudents.json());
-      setAnnonces(await resAnnonces.json());
-
     } catch (err) {
       console.error("Fetch Error:", err);
       setGlobalError("Problème de connexion avec l'API Ecampus.");
@@ -111,6 +127,20 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
   const activeStudentsCount = useMemo(() => {
     return students.filter(s => s.status === 'ACTIF' || s.status === 'VALIDE').length;
   }, [students]);
+
+  const saeOnlineCount = useMemo(() => {
+    return allSaes.filter(s => s.status === 'VALIDE').length;
+  }, [allSaes]);
+
+  const devoirsRecusCount = useMemo(() => {
+    return allRendus.length;
+  }, [allRendus]);
+
+  const moyennePromo = useMemo(() => {
+    const notes = allRendus.map(r => parseFloat(r.note)).filter(n => !isNaN(n));
+    if (notes.length === 0) return 'N/A';
+    return (notes.reduce((acc, n) => acc + n, 0) / notes.length).toFixed(2);
+  }, [allRendus]);
 
   // --------------------------------------------------------------------------
   // --- 7. LOGIQUE MÉTIER : PROFIL & SÉCURITÉ ---
@@ -140,11 +170,27 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     setViewingRendusFor(saeId);
     setLoadingVitrine(true);
     try {
-      const res = await fetch(`${API_URL}/api/admin/saes/${saeId}/rendus`, {
+      let res = await fetch(`${API_URL}/api/admin/saes/${saeId}/rendus`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+
+      if (!res.ok) {
+        console.warn(`Route /saes/${saeId}/rendus indisponible (${res.status}), tentative /admin/rendus`);
+        res = await fetch(`${API_URL}/api/admin/rendus?saeId=${saeId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      }
+
+      if (!res.ok) {
+        setSelectedSaeRendus([]);
+        return;
+      }
+
       setSelectedSaeRendus(await res.json());
-    } finally { setLoadingVitrine(false); }
+    } catch (err) {
+      console.warn('Erreur fetchRendusForSae', err);
+      setSelectedSaeRendus([]);
+    } finally {
+      setLoadingVitrine(false);
+    }
   };
 
   const handleTogglePublic = async (renduId, current) => {
@@ -168,19 +214,60 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
 
   const handleCreateSAE = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    Object.keys(saeForm).forEach(k => {
-      if (saeForm[k]) formData.append(k, saeForm[k]);
-    });
-    const res = await fetch(`${API_URL}/api/admin/saes`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
-      body: formData
-    });
-    if (res.ok) {
-      alert("SAE publiée.");
+    const hasFiles = saeForm.imageFile || saeForm.pdfFile;
+    const headers = { 'Authorization': `Bearer ${token}` };
+    let body;
+
+    if (hasFiles) {
+      const formData = new FormData();
+      formData.append('titre', saeForm.titre);
+      formData.append('ressource', saeForm.ressource);
+      formData.append('date', saeForm.date);
+      formData.append('desc', saeForm.desc);
+      formData.append('description', saeForm.desc);
+      formData.append('promotion', saeForm.promotion);
+      formData.append('semestre', saeForm.semestre);
+      if (saeForm.imageFile) {
+        formData.append('image', saeForm.imageFile);
+        formData.append('imageFile', saeForm.imageFile);
+      }
+      if (saeForm.pdfFile) {
+        formData.append('pdf', saeForm.pdfFile);
+        formData.append('pdfFile', saeForm.pdfFile);
+      }
+      body = formData;
+    } else {
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify({
+        titre: saeForm.titre,
+        ressource: saeForm.ressource,
+        date: saeForm.date,
+        desc: saeForm.desc,
+        description: saeForm.desc,
+        promotion: saeForm.promotion,
+        semestre: saeForm.semestre
+      });
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/admin/saes`, {
+        method: 'POST',
+        headers,
+        body
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        alert(`Erreur création SAE : ${res.status} ${errorText}`);
+        return;
+      }
+
+      alert('SAE publiée.');
       setActiveTab('catalogue');
-      fetchAllData();
+      await fetchAllData();
+    } catch (err) {
+      console.error('handleCreateSAE', err);
+      alert('Erreur réseau lors de la création de la SAE.');
     }
   };
 
@@ -235,27 +322,65 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     e.preventDefault();
     const method = editingAnnonce ? 'PUT' : 'POST';
     const url = editingAnnonce ? `${API_URL}/api/annonces/${editingAnnonce.id}` : `${API_URL}/api/annonces`;
-    
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify(annonceForm)
-    });
-    if (res.ok) {
-      alert("Opération réussie.");
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(annonceForm)
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        if (editingAnnonce && res.status === 405) {
+          const fallback = await fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(annonceForm)
+          });
+          if (fallback.ok) {
+            alert('Annonce mise à jour.');
+            setAnnonceForm({ titre: '', contenu: '', cible: 'Tous' });
+            setEditingAnnonce(null);
+            await fetchAllData();
+            return;
+          }
+          const fallbackText = await fallback.text();
+          alert(`Erreur API mise à jour : ${fallback.status} ${fallbackText}`);
+          return;
+        }
+        alert(`Erreur API : ${res.status} ${errorText}`);
+        return;
+      }
+
+      alert(editingAnnonce ? 'Annonce mise à jour.' : 'Annonce ajoutée.');
       setAnnonceForm({ titre: '', contenu: '', cible: 'Tous' });
       setEditingAnnonce(null);
-      fetchAllData();
+      await fetchAllData();
+    } catch (err) {
+      console.error('handlePostAnnonce', err);
+      alert('Erreur réseau lors de l’envoi de l’annonce.');
     }
   };
 
   const deleteAnnonce = async (id) => {
     if (!window.confirm("Supprimer l'annonce ?")) return;
-    await fetch(`${API_URL}/api/annonces/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    fetchAllData();
+    try {
+      const res = await fetch(`${API_URL}/api/annonces/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        alert(`Impossible de supprimer l'annonce : ${res.status} ${errorText}`);
+        return;
+      }
+      alert('Annonce supprimée.');
+      fetchAllData();
+    } catch (err) {
+      console.error('deleteAnnonce', err);
+      alert('Erreur réseau lors de la suppression de l’annonce.');
+    }
   };
 
   // --------------------------------------------------------------------------
@@ -266,13 +391,12 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
     <header className="mmi-pill-header">
       <div className="mmi-admin-brand" onClick={() => setActiveTab('catalogue')}>
         <img src="/ecampus.svg" alt="logo" className="mmi-logo-img" />
-        <span className="cursive-font bordeaux-text mmi-brand-name">Ecampus Admin</span>
       </div>
 
       <nav className="mmi-nav-links cursive-font">
-        {['catalogue', 'sae', 'etudiant', 'annonces', 'profil'].map(tab => (
+        {['dashboard','catalogue', 'sae', 'etudiant', 'annonces', 'profil'].map(tab => (
           <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)}>
-            {tab.toUpperCase()}
+            {tab}
           </button>
         ))}
       </nav>
@@ -328,6 +452,38 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
 
         <AnimatePresence mode="wait">
           
+          {/* DASHBOARD PRINCIPAL */}
+          {activeTab === 'dashboard' && (
+            <motion.div key="dashboard" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="mmi-stage">
+              <div className="dashboard-cards-row">
+                <div className="dashboard-card">
+                  <span className="dashboard-value cursive-font">{saeOnlineCount}</span>
+                  <span className="dashboard-label">SAE EN LIGNE</span>
+                </div>
+                <div className="dashboard-card">
+                  <span className="dashboard-value cursive-font">{devoirsRecusCount}</span>
+                  <span className="dashboard-label">DEVOIRS REÇUS</span>
+                </div>
+                <div className="dashboard-card dashboard-card-large">
+                  <span className="dashboard-value cursive-font">{moyennePromo}</span>
+                  <span className="dashboard-label">MOYENNE PROMO</span>
+                </div>
+              </div>
+
+              <div className="mmi-glass-card">
+                <h3 className="cursive-font">Annonces récentes sur la plateforme</h3>
+                <div className="annonces-card-list">
+                  {recentAnnonces.length ? recentAnnonces.map(a => (
+                    <div key={a.id} className="annonce-item">
+                      <strong>{a.titre}</strong> <small>{new Date(a.date).toLocaleDateString('fr-FR')}</small>
+                      <p>{a.contenu}</p>
+                    </div>
+                  )) : <p className="empty-txt">Aucune annonce en ce moment.</p>}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* CATALOGUE ET VITRINE */}
           {activeTab === 'catalogue' && (
             <motion.div key="cat" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="mmi-stage">
@@ -336,18 +492,23 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
                 <table className="mmi-data-table">
                   <thead><tr><th>PROJET</th><th>STATUT</th><th className="text-right">ACTIONS</th></tr></thead>
                   <tbody>
-                    {allSaes.map(sae => (
-                      <React.Fragment key={sae.id}>
-                        <tr>
-                          <td className="bold-cell">[{sae.ressource}] {sae.titre}</td>
-                          <td className={sae.status === 'VALIDE' ? 'status-valide' : 'status-draft'}>{sae.status}</td>
-                          <td className="text-right">
-                            <button className="mmi-btn-toggle" onClick={() => toggleSaeVisibility(sae.id, sae.status)}>
-                              {sae.status === 'VALIDE' ? "MASQUER" : "PUBLIER"}
-                            </button>
-                            <button className="mmi-btn-vitrine" onClick={() => fetchRendusForSae(sae.id)}>VITRINE</button>
-                          </td>
-                        </tr>
+                    {allSaes.map(sae => {
+                      const pdfLink = sae.pdfUrl || sae.pdf_url || sae.pdf || null;
+                      return (
+                        <React.Fragment key={sae.id}>
+                          <tr>
+                            <td className="bold-cell">[{sae.ressource}] {sae.titre}</td>
+                            <td className={sae.status === 'VALIDE' ? 'status-valide' : 'status-draft'}>{sae.status}</td>
+                            <td className="text-right" style={{display: 'flex', justifyContent: 'flex-end', gap: '8px', alignItems: 'center'}}>
+                              {pdfLink && (
+                                <a href={pdfLink} target="_blank" rel="noreferrer" className="mmi-btn-link">PDF</a>
+                              )}
+                              <button className="mmi-btn-toggle" onClick={() => toggleSaeVisibility(sae.id, sae.status)}>
+                                {sae.status === 'VALIDE' ? "MASQUER" : "PUBLIER"}
+                              </button>
+                              <button className="mmi-btn-vitrine" onClick={() => fetchRendusForSae(sae.id)}>VITRINE</button>
+                            </td>
+                          </tr>
                         {viewingRendusFor === sae.id && (
                           <tr className="vitrine-row">
                             <td colSpan="3">
@@ -365,7 +526,8 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
                           </tr>
                         )}
                       </React.Fragment>
-                    ))}
+                    );
+                  })}
                   </tbody>
                 </table>
               </div>
@@ -396,7 +558,8 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
                   <div className="mmi-input-group"><label>Titre de la SAE</label><input type="text" className="mmi-input-pill" onChange={e => setSaeForm({...saeForm, titre: e.target.value})} required /></div>
                   <div className="mmi-input-group"><label>Ressource concernée</label><input type="text" className="mmi-input-pill" onChange={e => setSaeForm({...saeForm, ressource: e.target.value})} required /></div>
                   <div className="mmi-input-group"><label>Échéance de rendu</label><input type="date" className="mmi-input-pill" onChange={e => setSaeForm({...saeForm, date: e.target.value})} required /></div>
-                  <div className="mmi-input-group"><label>Illustration SAE</label><input type="file" className="mmi-input-pill" onChange={e => setSaeForm({...saeForm, imageFile: e.target.files[0]})} /></div>
+                  <div className="mmi-input-group"><label>Illustration SAE</label><input type="file" className="mmi-input-pill" accept="image/*" onChange={e => setSaeForm({...saeForm, imageFile: e.target.files[0]})} /></div>
+                  <div className="mmi-input-group"><label>Document PDF (consignes / sujet)</label><input type="file" className="mmi-input-pill" accept="application/pdf" onChange={e => setSaeForm({...saeForm, pdfFile: e.target.files[0]})} /></div>
                   <div className="mmi-input-group full-span"><label>Consignes de travail</label><textarea rows="5" className="mmi-input-pill mmi-textarea" onChange={e => setSaeForm({...saeForm, desc: e.target.value})} required></textarea></div>
                   <div className="mmi-form-actions"><button type="submit" className="mmi-btn-black">CRÉER LE PROJET</button></div>
                 </form>
@@ -458,8 +621,19 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
                   </div>
                   <div className="mmi-input-group full-span"><label>Message</label><textarea rows="4" className="mmi-input-pill mmi-textarea" value={annonceForm.contenu} onChange={e => setAnnonceForm({...annonceForm, contenu: e.target.value})} required></textarea></div>
                   <div className="mmi-form-actions">
-                    <button type="submit" className="mmi-btn-black">PUBLIER</button>
-                    {editingAnnonce && <button type="button" onClick={() => setEditingAnnonce(null)} className="mmi-btn-toggle">ANNULER</button>}
+                    <button type="submit" className="mmi-btn-black">{editingAnnonce ? 'METTRE À JOUR' : 'PUBLIER'}</button>
+                    {editingAnnonce && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingAnnonce(null);
+                          setAnnonceForm({ titre: '', contenu: '', cible: 'Tous' });
+                        }}
+                        className="mmi-btn-toggle"
+                      >
+                        ANNULER
+                      </button>
+                    )}
                   </div>
                 </form>
               </div>
@@ -467,15 +641,15 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
               <div className="mmi-glass-card">
                 <div className="mmi-history-list">
                   {annonces.map(a => (
-                    <div key={a.id} className="mmi-history-item">
+                    <div key={a.id} className="mmi-history-item cursive-font">
                       <div className="h-header">
-                        <strong>{a.titre} <em>({a.cible})</em></strong>
+                        <strong className="cursive-font">{a.titre} <em>({a.cible})</em></strong>
                         <div className="h-btns">
-                          <button onClick={() => {setEditingAnnonce(a); setAnnonceForm({titre:a.titre, contenu:a.contenu, cible:a.cible})}}>✎</button>
-                          <button onClick={() => deleteAnnonce(a.id)}>🗑</button>
+                          <button type="button" className="mmi-history-btn cursive-font" onClick={() => {setEditingAnnonce(a); setAnnonceForm({titre:a.titre, contenu:a.contenu, cible:a.cible})}}>✎</button>
+                          <button type="button" className="mmi-history-btn cursive-font" onClick={() => deleteAnnonce(a.id)}>🗑</button>
                         </div>
                       </div>
-                      <p>{a.contenu}</p>
+                      <p className="cursive-font">{a.contenu}</p>
                     </div>
                   ))}
                 </div>
@@ -547,7 +721,7 @@ export default function AdminDashboard({ user, onLogout, API_URL }) {
       </main>
 
       <footer className="mmi-admin-footer bordeaux-text cursive-font">
-        © 2026 Ecampus MMI Vélizy — Haute Supervision Administrative
+        © 2026 Ecampus MMI Vélizy —  Administrateur
       </footer>
     </div>
   );

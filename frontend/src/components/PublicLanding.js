@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import './Public.css';
+import logo from './ecampus.svg';
+import MentionsLegales from './MentionsLegales';
+import Confidentialite from './Confidentialite';
 
+import NosProjets from './NosProjets';
+import NotreEquipe from './NotreEquipe';
 /**
  * COMPOSANT : PublicLanding (Version Étendue 400+ lignes)
  * Gère le portail institutionnel ECAMPUS avec catalogue interactif.
@@ -29,6 +34,9 @@ export default function PublicLanding({ onShowLogin, API_URL }) {
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef });
   const opacityHero = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  const [legalView, setLegalView] = useState(null); // 'mentions' ou 'privacy'
+  const [currentView, setCurrentView] = useState('landing'); // 'landing', 'projets', 'equipe' ou 'parcoursup'
 
   // --- LOGIQUE DE RÉCUPÉRATION DES DONNÉES (FETCH + RETRY) ---
   const fetchPublicData = useCallback(async (retryCount = 0) => {
@@ -114,45 +122,79 @@ export default function PublicLanding({ onShowLogin, API_URL }) {
   };
 
   // --- DATA STATIQUES (FAQ & TÉMOIGNAGES) ---
-  const faqData = [
-    { q: "Comment s'inscrire au BUT MMI ?", a: "L'inscription se fait via Parcoursup pour les bacheliers ou via candidature spontanée pour les réorientations." },
-    { q: "Quels sont les débouchés ?", a: "Développeur Full-stack, UX Designer, Chargé de communication, Motion Designer, etc." },
-    { q: "Peut-on faire de l'alternance ?", a: "Oui, la troisième année du BUT MMI à Vélizy est ouverte à l'apprentissage." }
-  ];
+ const faqData = [
+  { 
+    q: "Quelles sont les matières principales ?", 
+    a: "Développement web (JS, PHP, Frameworks), UX/UI Design, Audiovisuel (Montage, Prise de vue), Stratégie de communication et Anglais." 
+  },
+  { 
+    q: "Quel matériel faut-il pour réussir ?", 
+    a: "Un ordinateur portable est nécessaire. L'IUT dispose aussi de salles Mac, de studios photo et d'un parc de caméras en libre accès." 
+  },
+  { 
+    q: "L'alternance est-elle possible dès la 1ère année ?", 
+    a: "Non, l'alternance débute en 3ème année (BUT 3) pour vous permettre d'acquérir d'abord les bases techniques indispensables." 
+  },
+  { 
+    q: "Quels sont les critères d'admission ?", 
+    a: "Nous regardons les notes de français, d'anglais et de spécialités, mais surtout votre motivation et votre 'portfolio' (projets personnels)." 
+  }
+];
 
   // --- RENDU : COMPOSANTS INTERNES ---
-  const Navbar = () => (
+  const Navbar = ({ onNavigate }) => (
     <nav className={`public-navbar ${isScrolled ? 'scrolled' : ''}`}>
       <div className="nav-container">
-        <div className="nav-left" onClick={() => setSelectedSae(null)}>
-          <img src="/ecampus.svg" alt="Logo" className="nav-logo-img" />
-          <span className="brand-name bordeaux-text cursive-font">Ecampus</span>
+        <div className="nav-left" onClick={() => {
+          setSelectedSae(null);
+          onNavigate('landing');
+        }}>
+          <img src={logo} alt="Logo" className="footer-logo" />
         </div>
+        
         <div className="nav-center cursive-font">
-          <a href="#hero" className="nav-link">ACCUEIL</a>
+          <button onClick={() => { setSelectedSae(null); onNavigate('landing'); }} className="nav-link-btn">accueil</button>
+          
           <div className="nav-dropdown-wrapper" 
                onMouseEnter={() => setIsButMenuOpen(true)} 
                onMouseLeave={() => setIsButMenuOpen(false)}>
-            <span className="nav-link">BUT MMI ▾</span>
+            <span className="nav-link">but mmi ▾</span>
             <AnimatePresence>
               {isButMenuOpen && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="nav-dropdown-content">
-                  <a href="#formation">PROGRAMME</a>
-                  <a href="#projets">PROJETS</a>
-                  <a href="#faq">FAQ</a>
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: 10 }} 
+                  className="nav-dropdown-content"
+                >
+                  <div className="dropdown-item-custom" onClick={() => { setSelectedSae(null); onNavigate('projets'); setIsButMenuOpen(false); }}>
+                    <strong>Nos Projets</strong>
+                    <p>Galerie des créations MMI</p>
+                  </div>
+                  
+                  <div className="dropdown-item-custom" onClick={() => { setSelectedSae(null); onNavigate('equipe'); setIsButMenuOpen(false); }}>
+                    <strong>Notre Équipe</strong>
+                    <p>Enseignants & intervenants</p>
+                  </div>
+
+                  <a href="#faq" className="dropdown-link-simple" onClick={() => { setIsButMenuOpen(false); onNavigate('landing'); }}>FAQ</a>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
-          <a href="#projets" className="nav-link">CATALOGUE</a>
-          <a href="#contact" className="nav-link">CONTACT</a>
+          
+          <button onClick={() => { setSelectedSae(null); onNavigate('projets'); }} className="nav-link-btn">catalogue</button>
+          
+          <a href="#contact" className="nav-link">contact</a>
         </div>
+
         <div className="nav-right">
-          <button onClick={onShowLogin} className="maquette-btn-black nav-connexion-btn cursive-font">CONNEXION</button>
+          <button onClick={onShowLogin} className="maquette-btn-black nav-connexion-btn cursive-font">connexion</button>
         </div>
       </div>
     </nav>
   );
+
 
   const SectionHero = () => (
     <motion.section id="hero" className="landing-hero fade-creme" style={{ opacity: opacityHero }} ref={heroRef}>
@@ -174,6 +216,23 @@ export default function PublicLanding({ onShowLogin, API_URL }) {
       </div>
       <div className="hero-visual-bg"></div>
     </motion.section>
+  );
+
+  const SectionButMmiInfo = () => (
+    <section className="but-mmi-section bg-white">
+      <div className="but-mmi-container">
+        <h2 className="but-mmi-title cursive-font">BUT MMI – IUT de Vélizy</h2>
+        <p className="but-mmi-intro">
+          Bienvenue sur le site officiel du département « Métiers du Multimédia et de l’Internet » de l’IUT de Vélizy.
+        </p>
+        <blockquote className="but-mmi-quote">
+          <span className="quote-mark">“</span>
+          Le département forme en trois ans des professionnel·le·s de la conception et de la réalisation de projets multimédias.
+          Il propose deux parcours : <strong>“Création numérique”</strong> et <strong>“Développement web et dispositifs interactifs.”</strong>
+          À la fois créatif·ve·s et compétent·e·s techniquement, les diplômé·e·s de notre département sont polyvalent·e·s dans le domaine des médias, du web et des nouvelles technologies.
+        </blockquote>
+      </div>
+    </section>
   );
 
   const SectionProjets = () => (
@@ -233,9 +292,13 @@ export default function PublicLanding({ onShowLogin, API_URL }) {
                 <div className="pub-sae-badge cursive-font">{sae.promotion}</div>
               </div>
               <div className="pub-sae-info">
-                <span className="pub-sae-tag bordeaux-text cursive-font">{sae.ressource}</span>
-                <h3 className="cursive-font">{sae.titre}</h3>
-                <p className="line-clamp">{sae.description}</p>
+                <span className="pub-sae-tag cursive-font">{sae.ressource || 'Autre'}</span>
+                <h3 className="cursive-font">{sae.titre || 'Titre du projet'}</h3>
+                <p className="line-clamp">{sae.description || 'Description du projet en cours de rédaction...'}</p>
+                <div className="pub-sae-footer">
+                  <span>{sae.date_rendu ? `Rendu avant ${new Date(sae.date_rendu).toLocaleDateString('fr-FR')}` : 'Date non définie'}</span>
+                  <button className="pub-sae-btn cursive-font" onClick={(e)=>{ e.stopPropagation(); setSelectedSae(sae); }}>Voir +</button>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -244,37 +307,42 @@ export default function PublicLanding({ onShowLogin, API_URL }) {
     </section>
   );
 
-  const SectionFormation = () => (
-    <section id="formation" className="landing-formation fade-creme">
-      <div className="formation-grid">
-        <div className="formation-left">
-          <span className="section-label bordeaux-text cursive-font">PROGRAMME</span>
-          <h2 className="section-title-large cursive-font bordeaux-text">Le BUT MMI en 3 ans.</h2>
-          <p className="formation-intro">
-            Le Bachelor Universitaire de Technologie (BUT) est un diplôme national qui forme des cadres intermédiaires. 
-            Le parcours MMI est axé sur la polyvalence technique et créative.
-          </p>
-          <div className="parcours-highlights">
-            <div className="highlight-pill cursive-font"><strong>DW</strong> DÉVELOPPEMENT WEB</div>
-            <div className="highlight-pill cursive-font"><strong>CN</strong> CRÉATION NUMÉRIQUE</div>
+ const SectionFormation = () => (
+  <section id="formation" className="landing-formation fade-creme">
+    <div className="formation-grid">
+      <div className="formation-left">
+        <span className="section-label bordeaux-text cursive-font">LA FORMATION</span>
+        <h2 className="section-title-large cursive-font bordeaux-text">Devenir créateur de demain.</h2>
+        <p className="formation-intro">
+          Le BUT MMI à Vélizy forme des experts du web et du contenu numérique. 
+          Pendant 3 ans, vous apprenez à concevoir, développer et diffuser des expériences interactives.
+        </p>
+        <div className="parcours-highlights">
+          {/* Les 2 parcours officiels du site */}
+          <div className="highlight-pill cursive-font">
+            <strong>DW</strong> DÉVELOPPEMENT WEB & DISPOSITIFS INTERACTIFS
+          </div>
+          <div className="highlight-pill cursive-font">
+            <strong>CN</strong> CRÉATION NUMÉRIQUE & DESIGN
           </div>
         </div>
-        <div className="formation-right-stats">
-          {[
-            { n: "6", l: "SEMESTRES" },
-            { n: "2", l: "PARCOURS" },
-            { n: "1", l: "ALTERNANCE" },
-            { n: "~50", l: "ÉTUDIANTS" }
-          ].map((s, i) => (
-            <motion.div key={i} className="stat-box" whileHover={{ scale: 1.05 }}>
-              <h3 className="cursive-font">{s.n}</h3>
-              <p>{s.l}</p>
-            </motion.div>
-          ))}
-        </div>
       </div>
-    </section>
-  );
+      <div className="formation-right-stats">
+        {[
+          { n: "600h", l: "DE PROJETS (SAE)" },
+          { n: "22", l: "SEMAINES DE STAGE" },
+          { n: "100%", l: "PROXIMITÉ PRO" },
+          { n: "15+", l: "LOGICIELS PROS" }
+        ].map((s, i) => (
+          <motion.div key={i} className="stat-box" whileHover={{ scale: 1.05 }}>
+            <h3 className="cursive-font">{s.n}</h3>
+            <p>{s.l}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
 
   const SectionFAQ = () => (
     <section id="faq" className="landing-faq bg-white">
@@ -344,44 +412,56 @@ export default function PublicLanding({ onShowLogin, API_URL }) {
   // --- RENDU FINAL (CONDITIONNEL) ---
   return (
     <div className="public-page-wrapper">
-      <Navbar />
+      <Navbar onNavigate={(view) => { setSelectedSae(null); setCurrentView(view); }} />
 
       <main>
         <AnimatePresence mode="wait">
-          {!selectedSae ? (
-            <motion.div key="main-content">
+          {/* VUE ACCUEIL */}
+          {currentView === 'landing' && !selectedSae && (
+            <motion.div key="main-content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <SectionHero />
+              <SectionButMmiInfo />
+              {loading && <p className="text-center cursive-font">Chargement des projets...</p>}
               <SectionProjets />
               <SectionFormation />
               <SectionFAQ />
               <SectionContact />
             </motion.div>
-          ) : (
+          )}
+
+          {/* VUE NOS PROJETS */}
+          {currentView === 'projets' && (
+            <NosProjets 
+              saes={saes} 
+              API_URL={API_URL} 
+              onBack={() => setCurrentView('landing')} 
+            />
+          )}
+
+          {/* VUE NOTRE ÉQUIPE */}
+          {currentView === 'equipe' && (
+            <NotreEquipe 
+              onBack={() => setCurrentView('landing')} 
+            />
+          )}
+
+          
+          {/* VUE DÉTAIL SAE */}
+          {selectedSae && (
             <motion.div key="detail" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="detail-view-container fade-creme">
-              <div className="detail-nav">
-                <button className="maquette-back cursive-font" onClick={() => setSelectedSae(null)}>← Retour au catalogue</button>
-              </div>
-              <div className="pub-sae-card detail-card-hero">
-                <div className="detail-grid">
-                  <div className="detail-visual">
-                    <img src={`${API_URL}${selectedSae.image}`} alt={selectedSae.titre} className="detail-img-full" />
-                  </div>
-                  <div className="detail-body">
-                    <span className="bordeaux-text cursive-font">{selectedSae.promotion}</span>
-                    <h2 className="cursive-font bordeaux-text title-large">{selectedSae.titre}</h2>
-                    <div className="meta-badge-row">
-                      <span className="badge-pill">{selectedSae.ressource}</span>
-                      <span className="badge-pill">{selectedSae.semestre || "S1"}</span>
-                    </div>
-                    <div className="description-box">
-                      <h4 className="cursive-font">À propos du projet</h4>
-                      <p>{selectedSae.description || "Pas de description détaillée disponible."}</p>
-                    </div>
-                    {selectedSae.pdf_link && (
-                      <a href={`${API_URL}${selectedSae.pdf_link}`} target="_blank" rel="noreferrer" className="btn-bordeaux-filled cursive-font">
-                        TÉLÉCHARGER LE SUJET (PDF)
-                      </a>
-                    )}
+              <div className="detail-card">
+                <button className="btn-back-small cursive-font" onClick={() => setSelectedSae(null)}>
+                  ← Retour aux projets
+                </button>
+                <div className="detail-image" style={{ backgroundImage: `url(${API_URL}${selectedSae.image})` }} />
+                <div className="detail-content">
+                  <span className="pub-sae-badge cursive-font">{selectedSae.promotion || '2024'}</span>
+                  <h2 className="cursive-font">{selectedSae.titre || 'Titre de SAE'}</h2>
+                  <p className="detail-tags cursive-font">{selectedSae.ressource || 'Categorie inconnue'}</p>
+                  <p className="detail-description">{selectedSae.description || 'Aucune description fournie.'}</p>
+                  <div className="detail-meta">
+                    <span>Échéance : {selectedSae.date_rendu ? new Date(selectedSae.date_rendu).toLocaleDateString('fr-FR') : 'Non définie'}</span>
+                    <button className="pub-sae-btn cursive-font" onClick={() => alert('Accéder au projet : ' + (selectedSae.titre || '...'))}>Accéder</button>
                   </div>
                 </div>
               </div>
@@ -390,13 +470,24 @@ export default function PublicLanding({ onShowLogin, API_URL }) {
         </AnimatePresence>
       </main>
 
+      <AnimatePresence>
+          {legalView === 'mentions' && (
+            <MentionsLegales onBack={() => setLegalView(null)} />
+          )}
+          {legalView === 'privacy' && (
+            <Confidentialite onBack={() => setLegalView(null)} />
+          )}
+        </AnimatePresence>
+
+
       <footer className="landing-footer bordeaux-text cursive-font">
         <div className="footer-content">
-          <img src="/ecampus.svg" alt="Logo" className="footer-logo" />
+          <img src={logo} alt="Logo" className="footer-logo" />
           <p>© 2026 Ecampus MMI Vélizy - Tous droits réservés.</p>
           <div className="footer-links">
-            <span>Mentions légales</span> | <span>Confidentialité</span>
-          </div>
+    <span onClick={() => setLegalView('mentions')}>Mentions légales</span> | 
+    <span onClick={() => setLegalView('privacy')}>Confidentialité</span>
+</div>
         </div>
       </footer>
     </div>

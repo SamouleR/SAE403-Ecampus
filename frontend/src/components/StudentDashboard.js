@@ -120,7 +120,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
   }, [fetchAllStudentData]);
 
   // --------------------------------------------------------------------------
-  // --- 6. LOGIQUE MÉTIER : CALCULS & FILTRES (CORRECTION DES UNDEFINED) ---
+  // --- 6. LOGIQUE MÉTIER : CALCULS & FILTRES ---
   // --------------------------------------------------------------------------
 
   // Statistiques de l'étudiant
@@ -136,7 +136,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
     };
   }, [submissions, saes]);
 
-  // Gestion des notifications (CORRECTION : totalNotifsCount défini ici)
+  // Gestion des notifications
   const totalNotifsCount = useMemo(() => {
     const unreadMsgs = messages.filter(m => !m.lu && m.destinataire_id === user.id).length;
     return annonces.length + unreadMsgs;
@@ -147,7 +147,7 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
     return ['TOUTES', ...new Set(saes.map(s => s.ressource).filter(Boolean))];
   }, [saes]);
 
-  // Filtrage du catalogue (CORRECTION : filteredCatalogue défini ici)
+  // Filtrage du catalogue
   const filteredCatalogue = useMemo(() => {
     if (filterMatiere === 'TOUTES') return saes;
     return saes.filter(s => s.ressource === filterMatiere);
@@ -268,6 +268,13 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
     return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
+  // Récupérer la première lettre du prénom ou de l'email pour l'avatar
+  const getAvatarLetter = () => {
+    if (user?.prenom) return user.prenom[0].toUpperCase();
+    if (user?.nom) return user.nom[0].toUpperCase();
+    return user?.email ? user.email[0].toUpperCase() : 'E';
+  };
+
   // --------------------------------------------------------------------------
   // --- 9. COMPOSANTS INTERNES ---
   // --------------------------------------------------------------------------
@@ -279,14 +286,14 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
         <span className="brand-name cursive-font bordeaux-text">Ecampus</span>
       </div>
 
-      <nav className="nav-center cursive-font">
-        <button className={activeTab === 'catalogue' ? 'active' : ''} onClick={() => {setSelectedSae(null); setActiveTab('catalogue')}}>CATALOGUE</button>
-        <button className={activeTab === 'sae' ? 'active' : ''} onClick={() => {setSelectedSae(null); setActiveTab('sae')}}>MES SAE</button>
-        <button className={activeTab === 'messagerie' ? 'active' : ''} onClick={() => {setSelectedSae(null); setActiveTab('messagerie')}}>MESSAGERIE</button>
-        <button className={activeTab === 'profil' ? 'active' : ''} onClick={() => {setSelectedSae(null); setActiveTab('profil')}}>MON PROFIL</button>
+      <nav className="mmi-nav-links">
+        <button className={`mmi-nav-item ${activeTab === 'catalogue' ? 'active' : ''}`} onClick={() => {setSelectedSae(null); setActiveTab('catalogue')}}>catalogue</button>
+        <button className={`mmi-nav-item ${activeTab === 'sae' ? 'active' : ''}`} onClick={() => {setSelectedSae(null); setActiveTab('sae')}}>mes sae</button>
+        <button className={`mmi-nav-item ${activeTab === 'messagerie' ? 'active' : ''}`} onClick={() => {setSelectedSae(null); setActiveTab('messagerie')}}>messagerie</button>
+        <button className={`mmi-nav-item ${activeTab === 'profil' ? 'active' : ''}`} onClick={() => {setSelectedSae(null); setActiveTab('profil')}}>mon profil</button>
       </nav>
 
-      <div className="nav-right">
+      <div className="mmi-header-actions">
         <div className="notif-bell" onClick={() => setShowNotifs(!showNotifs)}>
           🔔 {totalNotifsCount > 0 && <span className="mmi-badge">{totalNotifsCount}</span>}
           <AnimatePresence>
@@ -302,12 +309,12 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
             )}
           </AnimatePresence>
         </div>
-        <div className="user-pill-small">
-          <div className="info">
-            <span className="name bordeaux-text">Étudiant</span>
-            <button onClick={onLogout} className="logout cursive-font">Déconnexion</button>
+        <div className="mmi-user-profile-pill">
+          <div className="avatar-circle">{getAvatarLetter()}</div>
+          <div className="mmi-user-info">
+            <span className="mmi-user-role bordeaux-text cursive-font">Étudiant</span>
+            <button onClick={onLogout} className="mmi-logout-link cursive-font">Déconnexion</button>
           </div>
-          <div className="avatar-circle">S</div>
         </div>
       </div>
     </header>
@@ -329,26 +336,45 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
 
           {/* VUE 1 : CATALOGUE COMPLET AVEC IMAGES */}
           {activeTab === 'catalogue' && (
-            <motion.div key="cat" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="stage">
+            <motion.div 
+              key="cat" 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+              className="stage"
+            >
               <div className="stage-header">
-                <h1 className="cursive-font bordeaux-text stage-title">Catalogue des SAE</h1>
                 <select className="mmi-select-pill" value={filterMatiere} onChange={(e) => setFilterMatiere(e.target.value)}>
                   {matieresList.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
 
-              <div className="mmi-grid">
+              <div className="mmi-grid-projets">
                 {filteredCatalogue.map(sae => (
-                  <div key={sae.id} className="mmi-sae-card" onClick={() => { setSelectedSae(sae); setActiveTab('sae'); }}>
-                    <div className="card-media" style={{backgroundImage: `url(${API_URL}${sae.image})`}}>
-                      <span className="res-tag">{sae.ressource}</span>
+                  <article key={sae.id} className="mmi-card-projet-complet" onClick={() => { setSelectedSae(sae); setActiveTab('sae'); }}>
+                    <div className="card-projet-image">
+                      <img src={`${API_URL}${sae.image}`} alt={sae.titre} onError={(e) => { e.target.src = '/fallback-sae.jpg'; }} />
+                      <span className="sae-year-pill">{sae.promotion || '2024'}</span>
+                      <span className="res-tag-overlay">{sae.ressource || 'SAE'}</span>
                     </div>
-                    <div className="card-body">
-                      <h3 className="cursive-font">{sae.titre}</h3>
-                      <p className="summary">{sae.description?.substring(0, 100)}...</p>
-                      <button className="btn-bordeaux-pill">DÉCOUVRIR LE PROJET</button>
+
+                    <div className="card-projet-body">
+                      <h3 className="cursive-font">{sae.titre || 'Projet SAE'}</h3>
+                      <p className="description-longue">{(sae.description || 'Aucune description pour le moment.').slice(0, 130)}...</p>
+
+                      <div className="tech-stack-badges">
+                        {(sae.technos || ['HTML', 'CSS', 'JS', 'React']).slice(0, 4).map((tech, idx) => (
+                          <span key={`${sae.id}-${idx}`} className="tech-badge">{tech}</span>
+                        ))}
+                      </div>
+
+                      <div className="card-projet-footer">
+                        <span>Rendu : {formatDateLabel(sae.date_rendu || new Date())}</span>
+                        <button className="btn-decouvrir-projet cursive-font">Voir détails</button>
+                      </div>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
             </motion.div>
@@ -356,7 +382,14 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
 
           {/* VUE 2 : MES SAE / RENDUS DÉTAILLÉS */}
           {activeTab === 'sae' && (
-            <motion.div key="sae" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="stage">
+            <motion.div 
+              key="sae" 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+              className="stage"
+            >
               {!selectedSae ? (
                 <>
                   <h2 className="cursive-font bordeaux-text stage-title">Mes SAE en cours</h2>
@@ -365,22 +398,39 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                       const isRemis = !!submissions[sae.id];
                       const status = getSaeStatus(sae.date_rendu, isRemis);
                       return (
-                        <div key={sae.id} className={`mmi-sae-card ${isRemis ? 'is-done' : 'is-pending'} ${status.pulse ? 'mmi-pulse' : ''}`} onClick={() => setSelectedSae(sae)}>
+                        <motion.div 
+                          key={sae.id} 
+                          className={`mmi-sae-card ${isRemis ? 'is-done' : 'is-pending'} ${status.pulse ? 'mmi-pulse' : ''}`} 
+                          onClick={() => setSelectedSae(sae)}
+                          whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                          whileTap={{ scale: 0.98 }}
+                        >
                           <div className="card-body">
                             <span className={`status-badge ${status.color}`}>{status.label}</span>
                             <h3 className="cursive-font">{sae.titre}</h3>
                             <p className="deadline">Limite : {formatDateLabel(sae.date_rendu)}</p>
                             <div className="mmi-progress-track">
-                              <motion.div className="fill" initial={{ width: 0 }} animate={{ width: isRemis ? '100%' : '15%' }} />
+                              <motion.div 
+                                className="fill" 
+                                initial={{ width: 0 }} 
+                                animate={{ width: isRemis ? '100%' : '15%' }}
+                                transition={{ duration: 0.5 }}
+                              />
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
                 </>
               ) : (
-                <div className="mmi-detail-box">
+                <motion.div 
+                  className="mmi-detail-box"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  transition={{ duration: 0.3 }}
+                >
                   <button className="back-link cursive-font" onClick={() => setSelectedSae(null)}>← Retour à la liste</button>
                   <div className="mmi-glass-card detail-card">
                     <div className="detail-hero-img" style={{backgroundImage: `url(${API_URL}${selectedSae.image})`}}>
@@ -423,23 +473,38 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
             </motion.div>
           )}
 
           {/* VUE 3 : MESSAGERIE WHATSAPP */}
           {activeTab === 'messagerie' && (
-            <motion.div key="msg" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="stage">
+            <motion.div 
+              key="msg" 
+              initial={{ opacity: 0, scale: 0.98 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="stage"
+            >
               <div className="mmi-whatsapp-layout">
                 <div className="sidebar-contacts">
-                  <div className="search-wrap"><input type="text" placeholder="Rechercher un contact..." onChange={e => setSearchContact(e.target.value)} /></div>
+                  <div className="search-wrap">
+                    <input type="text" placeholder="Rechercher un contact..." onChange={e => setSearchContact(e.target.value)} />
+                  </div>
                   <div className="contacts-list">
                     {contacts.filter(c => c.email.toLowerCase().includes(searchContact.toLowerCase())).map(c => (
-                      <div key={c.id} className={`contact-pill ${selectedContact?.id === c.id ? 'active' : ''}`} onClick={() => setSelectedContact(c)}>
+                      <motion.div 
+                        key={c.id} 
+                        className={`contact-pill ${selectedContact?.id === c.id ? 'active' : ''}`} 
+                        onClick={() => setSelectedContact(c)}
+                        whileHover={{ x: 5 }}
+                        transition={{ duration: 0.2 }}
+                      >
                         <div className="avatar-m">{c.email[0].toUpperCase()}</div>
-                        <div className="txt"><strong>{c.email.split('@')[0]}</strong><p>En ligne</p></div>
-                      </div>
+                        <div className="txt"><strong>{c.email.split('@')[0]}</strong><p>Enseignant</p></div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
@@ -449,21 +514,48 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                     <>
                       <div className="chat-header-bar cursive-font bordeaux-text">{selectedContact.email}</div>
                       <div className="chat-flow-container">
-                        {currentChatMessages.map(m => (
-                          <div key={m.id} className={`bubble-wrap ${m.expediteur_id === user.id ? 'me' : 'them'}`}>
+                        {currentChatMessages.map((m, index) => (
+                          <motion.div 
+                            key={m.id} 
+                            className={`bubble-wrap ${m.expediteur_id === user.id ? 'me' : 'them'}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
                             <div className="bubble">
                               <p>{m.contenu}</p>
                               <span className="time">{new Date(m.date_envoi).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                             </div>
-                          </div>
+                          </motion.div>
                         ))}
                       </div>
                       <form className="chat-input-bar" onSubmit={envoyerMessage}>
-                        <input type="text" placeholder="Écrire un message..." value={nouveauMsg} onChange={e => setNouveauMsg(e.target.value)} />
-                        <button type="submit">➤</button>
+                        <input 
+                          type="text" 
+                          placeholder="Écrire un message..." 
+                          value={nouveauMsg} 
+                          onChange={e => setNouveauMsg(e.target.value)} 
+                        />
+                        <motion.button 
+                          type="submit"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          ➤
+                        </motion.button>
                       </form>
                     </>
-                  ) : <div className="chat-placeholder">Sélectionnez une discussion pour démarrer.</div>}
+                  ) : (
+                    <div className="chat-placeholder">
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                      >
+                        💬 Sélectionnez une discussion pour démarrer.
+                      </motion.div>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -471,15 +563,43 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
 
           {/* VUE 4 : PROFIL PREMIUM AVEC STATS */}
           {activeTab === 'profil' && (
-            <motion.div key="prof" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="stage">
+            <motion.div 
+              key="prof" 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="stage"
+            >
               <div className="mmi-profile-container">
                 <aside className="mmi-profile-sidebar">
-                  <div className="avatar-xl-mmi">S</div>
+                  <motion.div 
+                    className="avatar-xl-mmi"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+                  >
+                    {getAvatarLetter()}
+                  </motion.div>
                   <h2 className="cursive-font bordeaux-text">Mon Espace MMI</h2>
                   <p className="email-m">{user.email}</p>
                   <div className="stats-pills-wrap">
-                    <div className="s-pill">Moyenne: <strong>{studentStats.moyenne}</strong></div>
-                    <div className="s-pill">Rendus: <strong>{studentStats.rendusCount}</strong></div>
+                    <motion.div 
+                      className="s-pill"
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      Moyenne: <strong>{studentStats.moyenne}</strong>
+                    </motion.div>
+                    <motion.div 
+                      className="s-pill"
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      Rendus: <strong>{studentStats.rendusCount}</strong>
+                    </motion.div>
                   </div>
                   <button onClick={onLogout} className="btn-logout-mmi-premium">DÉCONNEXION</button>
                 </aside>
@@ -502,7 +622,14 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                           <input type="password" value={passwords.confirmPass} className="mmi-pill-input" onChange={e => setPasswords({...passwords, confirmPass: e.target.value})} />
                         </div>
                       </div>
-                      <button type="submit" className="mmi-btn-black-pill full-width">METTRE À JOUR MES ACCÈS</button>
+                      <motion.button 
+                        type="submit" 
+                        className="mmi-btn-black-pill full-width"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        METTRE À JOUR MES ACCÈS
+                      </motion.button>
                     </form>
                   </div>
                 </section>
@@ -516,15 +643,31 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
       {/* MODALE VITRINE IMMERSIVE */}
       <AnimatePresence>
         {showGallery && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mmi-gallery-modal">
-            <div className="gallery-inner">
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="mmi-gallery-modal"
+          >
+            <motion.div 
+              className="gallery-inner"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25 }}
+            >
               <div className="gallery-header">
                 <h2 className="cursive-font bordeaux-text">🌟 Les "Pépites" de la Promotion</h2>
                 <button onClick={() => setShowGallery(false)} className="btn-close-gallery">Fermer</button>
               </div>
               <div className="gallery-grid-mmi">
                 {realisations.map(rel => (
-                  <div key={rel.id} className="gallery-card-mmi">
+                  <motion.div 
+                    key={rel.id} 
+                    className="gallery-card-mmi"
+                    whileHover={{ scale: 1.03 }}
+                    transition={{ duration: 0.2 }}
+                  >
                     <div className="user-meta">
                        <strong>{rel.email?.split('@')[0]}</strong>
                        <span>Le {new Date(rel.date_depot).toLocaleDateString()}</span>
@@ -533,10 +676,10 @@ export default function StudentDashboard({ user, onLogout, API_URL }) {
                       {rel.lien_rendu && <a href={rel.lien_rendu} target="_blank" rel="noreferrer" className="link-pill">Lien</a>}
                       {rel.fichier_rendu && <a href={`${API_URL}${rel.fichier_rendu}`} target="_blank" rel="noreferrer" className="link-pill file">Fichier</a>}
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

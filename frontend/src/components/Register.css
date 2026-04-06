@@ -1,4 +1,7 @@
-/* --- CONFIGURATION REGISTER --- */
+/* --- CONFIGURATION GENERALE --- */
+.bordeaux-text {
+  color: #a31d24;
+}
 
 .register-hero {
   display: flex;
@@ -14,9 +17,9 @@
   vertical-align: middle;
 }
 
-/* Alignement strict des colonnes */
+/* --- ALIGNEMENT FORMULAIRE --- */
 .register-form-aligned .maquette-label {
-  width: 280px; /* Largeur fixe pour que tous les inputs commencent au même endroit */
+  width: 280px; 
   text-align: left;
   font-size: 1.1rem;
 }
@@ -24,67 +27,68 @@
 .register-form-aligned .maquette-input {
   width: 320px;
   background-color: white;
-  border: 1px solid #ddd;
-  color: #333;
+  border: 1px solid #d1d1d1;
+  border-radius: 30px;
+  padding: 12px 20px;
+  outline: none;
 }
 
-/* Espaceur pour compenser la largeur du bouton noir sur les lignes du haut */
-.register-btn-spacer {
-  width: 150px; 
+/* Largeur du bouton S'INSCRIRE et de son espaceur */
+.register-btn-spacer, .btn-register-action {
+  width: 160px !important;
 }
 
 .btn-register-action {
-  width: 150px !important;
   font-size: 0.9rem !important;
   letter-spacing: 1px;
   padding: 12px 0 !important;
+  cursor: pointer;
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 850px) {
-  .register-hero {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .register-inline-logo {
-    height: 45px;
-  }
-
-  .register-form-aligned .maquette-row {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .register-form-aligned .maquette-label {
-    width: 100%;
-    text-align: center;
-  }
-
-  .register-form-aligned .maquette-input {
-    width: 100%;
-    max-width: 320px;
-  }
-
-  .register-btn-spacer {
-    display: none;
-  }
-
-  .btn-register-action {
-    width: 100% !important;
-    max-width: 320px;
-  }
-}
-
-/* --- FOOTER SPECIFIQUE --- */
-.maquette-footer {
-  margin-top: 50px;
+/* --- ALIGNEMENT DU FOOTER SUR LE BOUTON --- */
+.maquette-footer-aligned {
+  margin-top: 40px;
   display: flex;
-  justify-content: center;
-  gap: 15px;
+  justify-content: center; /* Centre l'ensemble du bloc */
+  width: 100%;
+}
+
+.footer-left-content {
+  /* On décale vers la droite pour que le bouton "Se connecter" 
+     commence au même niveau que le bouton "S'INSCRIRE" */
+  margin-left: 215px; 
+  display: flex;
   align-items: center;
+  gap: 15px;
+}
+
+.maquette-link-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid #000;
+  color: #000;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding-bottom: 2px;
+  font-size: 1rem;
 }
 
 .dark-text {
   color: #333;
+  font-size: 1rem;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 850px) {
+  .register-hero { flex-direction: column; }
+  .register-form-aligned .maquette-row { flex-direction: column; gap: 10px; }
+  .register-form-aligned .maquette-label { width: 100%; text-align: center; }
+  .register-btn-spacer { display: none; }
+  .register-form-aligned .maquette-input, .btn-register-action { width: 100% !important; max-width: 320px; }
+  
+  .footer-left-content {
+    margin-left: 0;
+    flex-direction: column;
+  }
 }

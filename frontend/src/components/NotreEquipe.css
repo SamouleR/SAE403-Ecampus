@@ -1,0 +1,100 @@
+/* Conteneur principal */
+.equipe-page-wrapper {
+    background-color: #ffffff;
+    padding: 80px 5% 120px;
+    min-height: 100vh;
+}
+
+.equipe-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* En-tête */
+.equipe-header {
+    margin-bottom: 60px;
+    max-width: 1100px;
+}
+
+.title-main-equipe {
+    font-size: 3.2rem;
+    font-weight: 400;
+    line-height: 1.1;
+    margin-bottom: 30px;
+    color: #1a1a1a;
+}
+
+.equipe-intro-text {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 40px;
+}
+
+/* Grille de 4 colonnes */
+.equipe-grid-layout {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px 30px;
+}
+
+.membre-card-v2 {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Cadre photo */
+.membre-photo-frame-v2 {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin-bottom: 20px;
+    background-color: #f0f0f0;
+    overflow: hidden;
+}
+
+.membre-img-v2 {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Garde les proportions des visages */
+    display: block;
+}
+
+/* Textes sous les photos */
+.membre-name-v2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #000;
+}
+
+.membre-job-v2 {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: #444;
+}
+
+/* Bouton Retour */
+.back-btn-minimal {
+    background: none;
+    border: none;
+    color: #a31d24; /* Ton Bordeaux */
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+    padding: 0;
+}
+
+.cursive-font {
+    font-family: 'Neulis Cursive', cursive !important;
+}
+
+/* Adaptabilité mobile */
+@media (max-width: 1100px) {
+    .equipe-grid-layout { grid-template-columns: repeat(2, 1fr); }
+    .title-main-equipe { font-size: 2.5rem; }
+}
+
+@media (max-width: 600px) {
+    .equipe-grid-layout { grid-template-columns: 1fr; }
+}

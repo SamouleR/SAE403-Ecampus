@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Register.css';
+import logo from './ecampus.svg'; 
 
 export default function Register({ onShowLogin, API_URL }) {
   const [formData, setFormData] = useState({
@@ -38,17 +39,18 @@ export default function Register({ onShowLogin, API_URL }) {
 
   return (
     <div className="maquette-bg">
-      {/* Header avec retour à gauche et logo à droite */}
+      {/* Header avec Retour et Logo */}
       <div className="maquette-header">
-        <button className="maquette-back cursive-font" onClick={onShowLogin}>← retour</button>
-        <img src="/ecampus.svg" alt="Logo" className="app-logo-top" />
+        <button className="maquette-back cursive-font" onClick={onShowLogin}>
+          ← retour
+        </button>
+        <img src={logo} alt="Logo Ecampus" className="app-logo-top" />
       </div>
 
       <div className="maquette-container">
-        {/* Titre avec logo inline comme sur ta maquette */}
         <div className="register-hero">
           <h1 className="maquette-title cursive-font bordeaux-text">
-            Rejoindre <img src="/ecampus.svg" alt="" className="register-inline-logo" />
+            Rejoindre <img src={logo} alt="" className="register-inline-logo" />
           </h1>
         </div>
 
@@ -64,7 +66,6 @@ export default function Register({ onShowLogin, API_URL }) {
               onChange={handleChange}
               required 
             />
-            {/* Espaceur pour l'alignement avec la ligne du bouton */}
             <div className="register-btn-spacer desktop-only"></div>
           </div>
 
@@ -94,9 +95,14 @@ export default function Register({ onShowLogin, API_URL }) {
             <button type="submit" className="maquette-btn-black btn-register-action cursive-font">S'INSCRIRE</button>
           </div>
 
-          <div className="maquette-footer">
-            <span className="dark-text">Déjà un compte ?</span>
-            <button type="button" className="maquette-register-btn cursive-font" onClick={onShowLogin}>Se connecter</button>
+          {/* Footer aligné sur le bouton du haut */}
+          <div className="maquette-footer-aligned">
+            <div className="footer-left-content">
+                <span className="dark-text">Déjà un compte ?</span>
+                <button type="button" className="maquette-link-btn cursive-font" onClick={onShowLogin}>
+                    Se connecter
+                </button>
+            </div>
           </div>
         </form>
       </div>

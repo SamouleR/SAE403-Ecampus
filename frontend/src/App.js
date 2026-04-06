@@ -6,7 +6,7 @@ import TeacherDashboard from './components/TeacherDashboard';
 import PublicLanding from './components/PublicLanding';
 import Register from './components/Register';
 import './App.css';
-
+import logo from './ecampus.svg';
 // ✅ URL Backend cPanel
 const API_URL = "https://api.samuelralaikoa.mmi-velizy.fr";
 
@@ -116,10 +116,15 @@ export default function App() {
           className="maquette-bg"
         >
           {/* Header avec Retour à gauche et Logo à droite */}
-          <div className="maquette-header">
-            <button className="maquette-back cursive-font" onClick={() => setView('public')}>← retour</button>
-            <img src="/ecampus.svg" alt="Logo Ecampus" className="app-logo-top" />
-          </div>
+          {/* Header avec Retour à gauche et Logo à droite */}
+<div className="maquette-header">
+  <button className="maquette-back cursive-font" onClick={() => setView('public')}>
+    ← retour
+  </button>
+  
+  {/* REMPLACE le chemin par la variable {logo} */}
+  <img src={logo} alt="Logo Ecampus" className="app-logo-top" />
+</div>
 
           {/* Navigation latérale GAUCHE */}
           <button 
@@ -155,6 +160,10 @@ export default function App() {
                   onChange={e => setCredentials({...credentials, pass: e.target.value})} 
                   required 
                 />
+                <div style={{ width: '120px' }}></div>
+              </div>
+
+              <div className="maquette-row" style={{ justifyContent: 'center' }}>
                 <button type="submit" className="maquette-btn-black">Connexion</button>
               </div>
 
