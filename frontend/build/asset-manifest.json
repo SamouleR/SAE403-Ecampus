@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.a6b43c77.css",
-    "main.js": "/static/js/main.cf0d950f.js",
+    "main.css": "/static/css/main.d9ffb3f2.css",
+    "main.js": "/static/js/main.962e1d79.js",
     "static/js/453.825386d9.chunk.js": "/static/js/453.825386d9.chunk.js",
     "static/media/VW.jpg": "/static/media/VW.b733862977d766b9fec3.jpg",
     "static/media/TL.jpg": "/static/media/TL.a31c53c1c7b4127934fc.jpg",
@@ -17,12 +17,12 @@
     "static/media/NEULISALT-REGULAR.OTF": "/static/media/NEULISALT-REGULAR.b1c142edfdef36f42652.OTF",
     "static/media/ecampus.svg": "/static/media/ecampus.4f1f55a2847387aecbb743ce039957c1.svg",
     "index.html": "/index.html",
-    "main.a6b43c77.css.map": "/static/css/main.a6b43c77.css.map",
-    "main.cf0d950f.js.map": "/static/js/main.cf0d950f.js.map",
+    "main.d9ffb3f2.css.map": "/static/css/main.d9ffb3f2.css.map",
+    "main.962e1d79.js.map": "/static/js/main.962e1d79.js.map",
     "453.825386d9.chunk.js.map": "/static/js/453.825386d9.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.a6b43c77.css",
-    "static/js/main.cf0d950f.js"
+    "static/css/main.d9ffb3f2.css",
+    "static/js/main.962e1d79.js"
   ]
 }

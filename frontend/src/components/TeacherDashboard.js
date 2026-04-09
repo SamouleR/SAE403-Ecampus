@@ -241,8 +241,15 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
         fetchData();
         setActiveTab('catalogue');
       } else {
-        const error = await res.json();
-        alert(`Erreur: ${error.message || "Une erreur est survenue"}`);
+        const contentType = res.headers.get("content-type");
+        let errorMsg = "Une erreur est survenue";
+        if (contentType && contentType.includes("application/json")) {
+          const error = await res.json();
+          errorMsg = error.message || errorMsg;
+        } else {
+          errorMsg = await res.text();
+        }
+        alert(`Erreur: ${errorMsg}`);
       }
     } catch (err) { 
       console.error("Erreur envoi:", err);
@@ -656,42 +663,54 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
                 </motion.div>
               )}
 
-              {/* ONGLET CATALOGUE AVEC CARDS MODERNES */}
+              {/* ONGLET CATALOGUE - CARROUSEL CSS SCROLL-SNAP (CORRIGÉ) */}
               {activeTab === 'catalogue' && (
-                <motion.div key="catalog" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <h2 className="cursive-font bordeaux-text page-heading">Gestion de la visibilité des SAE</h2>
-                  <div className="mmi-catalogue-grid">
-                    {saes.map(s => (
-                      <div key={s.id} className={`mmi-card-project ${s.status === 'BROUILLON' ? 'is-masked' : ''}`}>
-                        <div 
-                          className="project-media" 
-                          style={{backgroundImage: `url(${API_URL}${s.image})`}} 
-                          onClick={() => setSelectedSae(s)}
-                        >
-                          {s.status === 'BROUILLON' && <div className="masked-badge">BROUILLON</div>}
-                        </div>
-                        <div className="project-details">
-                          <div className="details-header">
-                            <span className="res-mini-tag">{s.ressource}</span>
-                            <button className={`mmi-toggle-vis ${s.status}`} onClick={() => toggleSaeVisibility(s.id, s.status)}>
-                              {s.status === 'VALIDE' ? '👁️ Public' : '👁️‍🗨️ Masqué'}
-                            </button>
+                <motion.div key="catalog" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="catalogue-carousel-container">
+                  <div className="carousel-header">
+                    <h2 className="cursive-font bordeaux-text page-heading">Gestion de la visibilité des SAE</h2>
+                    <div className="carousel-counter">{saes.length} projets</div>
+                  </div>
+                  
+                  <div className="carousel-list-wrapper">
+                    <ul className="carousel-list" id="saeCarouselList">
+                      {saes.map(s => (
+                        <li key={s.id} className={`carousel-sae-card ${s.status === 'BROUILLON' ? 'is-masked' : ''}`}>
+                          <div className="card-media" style={{backgroundImage: `url(${API_URL}${s.image})`}} onClick={() => setSelectedSae(s)}>
+                            {s.status === 'BROUILLON' && <div className="masked-badge">BROUILLON</div>}
+                            <div className="media-overlay"><span className="view-details">Voir détails →</span></div>
                           </div>
-                          <h4 className="cursive-font" onClick={() => setSelectedSae(s)}>{s.titre}</h4>
-                          <div className="project-actions">
-                            <button onClick={() => startEditing(s)} className="mmi-edit-btn">✏️ Modifier</button>
-                            <button onClick={() => handleDeleteSae(s.id)} className="mmi-delete-btn">🗑️ Supprimer</button>
-                          </div>
-                          {s.consigne_url && (
-                            <div className="document-badge">
-                              <span>{getFileIcon(s.consigne_url)}</span>
-                              <span>Consigne jointe</span>
+                          <div className="card-details">
+                            <div className="details-header">
+                              <span className="res-mini-tag">{s.ressource}</span>
+                              <button className={`mmi-toggle-vis ${s.status}`} onClick={() => toggleSaeVisibility(s.id, s.status)}>
+                                {s.status === 'VALIDE' ? '👁️ Public' : '👁️‍🗨️ Masqué'}
+                              </button>
                             </div>
-                          )}
-                          <p className="short-desc">{s.description?.substring(0, 80)}...</p>
-                        </div>
-                      </div>
-                    ))}
+                            <h4 className="cursive-font" onClick={() => setSelectedSae(s)}>{s.titre}</h4>
+                            <div className="card-actions">
+                              <button onClick={() => startEditing(s)} className="mmi-edit-btn">✏️ Modifier</button>
+                              <button onClick={() => handleDeleteSae(s.id)} className="mmi-delete-btn">🗑️ Supprimer</button>
+                            </div>
+                            {s.consigne_url && (
+                              <div className="document-badge">
+                                <span>{getFileIcon(s.consigne_url)}</span>
+                                <span>Consigne jointe</span>
+                              </div>
+                            )}
+                            <p className="short-desc">{s.description?.substring(0, 80)}...</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <button className="carousel-arrow carousel-arrow--prev" onClick={() => {
+                      const list = document.getElementById('saeCarouselList');
+                      if (list) list.scrollBy({ left: -340, behavior: 'smooth' });
+                    }} aria-label="Précédent">‹</button>
+                    <button className="carousel-arrow carousel-arrow--next" onClick={() => {
+                      const list = document.getElementById('saeCarouselList');
+                      if (list) list.scrollBy({ left: 340, behavior: 'smooth' });
+                    }} aria-label="Suivant">›</button>
                   </div>
                 </motion.div>
               )}
@@ -703,147 +722,34 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
                     <h2 className="cursive-font bordeaux-text">{isEditing ? "Modifier la SAE" : "Créer une Situation d'Apprentissage"}</h2>
                     <form className="mmi-form-complex" onSubmit={handleSubmitSae}>
                       <div className="mmi-form-row">
-                        <div className="mmi-form-group">
-                          <label className="bordeaux-text">Titre de la SAE *</label>
-                          <input 
-                            type="text" 
-                            className="mmi-pill-input" 
-                            value={saeForm.titre} 
-                            onChange={e => setSaeForm({...saeForm, titre: e.target.value})} 
-                            required 
-                          />
-                        </div>
-                        <div className="mmi-form-group">
-                          <label className="bordeaux-text">Matière / Domaine</label>
-                          <select 
-                            className="mmi-pill-input" 
-                            value={saeForm.ressource} 
-                            onChange={e => setSaeForm({...saeForm, ressource: e.target.value})}
-                          >
-                            <option>Développement Web</option>
-                            <option>Design & UX/UI</option>
-                            <option>Audiovisuel</option>
-                            <option>Communication</option>
-                          </select>
-                        </div>
+                        <div className="mmi-form-group"><label className="bordeaux-text">Titre de la SAE *</label><input type="text" className="mmi-pill-input" value={saeForm.titre} onChange={e => setSaeForm({...saeForm, titre: e.target.value})} required /></div>
+                        <div className="mmi-form-group"><label className="bordeaux-text">Matière / Domaine</label><select className="mmi-pill-input" value={saeForm.ressource} onChange={e => setSaeForm({...saeForm, ressource: e.target.value})}><option>Développement Web</option><option>Design & UX/UI</option><option>Audiovisuel</option><option>Communication</option></select></div>
                       </div>
-                      
                       <div className="mmi-form-row">
-                        <div className="mmi-form-group">
-                          <label className="bordeaux-text">Promotion</label>
-                          <select 
-                            className="mmi-pill-input" 
-                            value={saeForm.promotion} 
-                            onChange={e => setSaeForm({...saeForm, promotion: e.target.value})}
-                          >
-                            <option>2024</option>
-                            <option>2025</option>
-                            <option>2026</option>
-                            <option>2027</option>
-                          </select>
-                        </div>
-                        <div className="mmi-form-group">
-                          <label className="bordeaux-text">Semestre</label>
-                          <select 
-                            className="mmi-pill-input" 
-                            value={saeForm.semestre} 
-                            onChange={e => setSaeForm({...saeForm, semestre: e.target.value})}
-                          >
-                            <option>S1</option>
-                            <option>S2</option>
-                            <option>S3</option>
-                            <option>S4</option>
-                          </select>
-                        </div>
+                        <div className="mmi-form-group"><label className="bordeaux-text">Promotion</label><select className="mmi-pill-input" value={saeForm.promotion} onChange={e => setSaeForm({...saeForm, promotion: e.target.value})}><option>2024</option><option>2025</option><option>2026</option><option>2027</option></select></div>
+                        <div className="mmi-form-group"><label className="bordeaux-text">Semestre</label><select className="mmi-pill-input" value={saeForm.semestre} onChange={e => setSaeForm({...saeForm, semestre: e.target.value})}><option>S1</option><option>S2</option><option>S3</option><option>S4</option></select></div>
                       </div>
-
-                      <div className="mmi-form-group full">
-                        <label className="bordeaux-text">Description et consignes *</label>
-                        <textarea 
-                          className="mmi-pill-input mmi-area" 
-                          rows="6" 
-                          value={saeForm.desc} 
-                          onChange={e => setSaeForm({...saeForm, desc: e.target.value})} 
-                          required
-                        ></textarea>
-                      </div>
-                      
+                      <div className="mmi-form-group full"><label className="bordeaux-text">Description et consignes *</label><textarea className="mmi-pill-input mmi-area" rows="6" value={saeForm.desc} onChange={e => setSaeForm({...saeForm, desc: e.target.value})} required></textarea></div>
                       <div className="mmi-form-row">
-                        <div className="mmi-form-group">
-                          <label>Date de rendu *</label>
-                          <input 
-                            type="date" 
-                            className="mmi-pill-input" 
-                            value={saeForm.date} 
-                            onChange={e => setSaeForm({...saeForm, date: e.target.value})} 
-                            required 
-                          />
-                        </div>
-                        <div className="mmi-form-group">
-                          <label>Image de couverture</label>
-                          <input 
-                            type="file" 
-                            className="mmi-pill-input file" 
-                            onChange={e => setImageFile(e.target.files[0])} 
-                            accept="image/*"
-                          />
-                          <small className="input-help">JPG, PNG, GIF (max 5MB)</small>
-                        </div>
+                        <div className="mmi-form-group"><label>Date de rendu *</label><input type="date" className="mmi-pill-input" value={saeForm.date} onChange={e => setSaeForm({...saeForm, date: e.target.value})} required /></div>
+                        <div className="mmi-form-group"><label>Image de couverture</label><input type="file" className="mmi-pill-input file" onChange={e => setImageFile(e.target.files[0])} accept="image/*" /><small className="input-help">JPG, PNG, GIF (max 5MB)</small></div>
                       </div>
-
                       <div className="mmi-form-group full document-upload-section">
                         <label className="bordeaux-text">📋 Document consigne (PDF, DOC, PPT, etc.)</label>
                         <div className="document-upload-area">
-                          <input 
-                            type="file" 
-                            id="consigneUpload"
-                            className="document-input-hidden" 
-                            onChange={e => setConsigneFile(e.target.files[0])} 
-                            accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.odt"
-                          />
-                          <label htmlFor="consigneUpload" className="document-upload-label">
-                            <span className="upload-icon">📁</span>
-                            <span>Cliquez pour joindre un document consigne</span>
-                            <span className="upload-hint">PDF, DOC, DOCX, PPT, TXT (max 10MB)</span>
-                          </label>
+                          <input type="file" id="consigneUpload" className="document-input-hidden" onChange={e => setConsigneFile(e.target.files[0])} accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.odt" />
+                          <label htmlFor="consigneUpload" className="document-upload-label"><span className="upload-icon">📁</span><span>Cliquez pour joindre un document consigne</span><span className="upload-hint">PDF, DOC, DOCX, PPT, TXT (max 10MB)</span></label>
                         </div>
-                        
                         {consigneFile && (
-                          <div className="selected-document">
-                            <span className="doc-icon">{getFileIcon(consigneFile.name)}</span>
-                            <span className="doc-name">{consigneFile.name}</span>
-                            <span className="doc-size">({(consigneFile.size / 1024).toFixed(1)} KB)</span>
-                            <button type="button" className="remove-doc-btn" onClick={() => setConsigneFile(null)}>✖</button>
-                          </div>
+                          <div className="selected-document"><span className="doc-icon">{getFileIcon(consigneFile.name)}</span><span className="doc-name">{consigneFile.name}</span><span className="doc-size">({(consigneFile.size / 1024).toFixed(1)} KB)</span><button type="button" className="remove-doc-btn" onClick={() => setConsigneFile(null)}>✖</button></div>
                         )}
-                        
                         {isEditing && existingConsigne && !consigneFile && (
-                          <div className="existing-document">
-                            <div className="doc-info">
-                              <span className="doc-icon">{getFileIcon(existingConsigne)}</span>
-                              <span className="doc-name">Consigne actuelle: {existingConsigne.split('/').pop()}</span>
-                            </div>
-                            <button type="button" className="delete-doc-btn" onClick={handleDeleteConsigne}>🗑️ Supprimer la consigne</button>
-                          </div>
+                          <div className="existing-document"><div className="doc-info"><span className="doc-icon">{getFileIcon(existingConsigne)}</span><span className="doc-name">Consigne actuelle: {existingConsigne.split('/').pop()}</span></div><button type="button" className="delete-doc-btn" onClick={handleDeleteConsigne}>🗑️ Supprimer la consigne</button></div>
                         )}
                       </div>
-
                       <div className="mmi-form-footer">
-                        <button type="submit" className="mmi-btn-black-pill">
-                          {isEditing ? "METTRE À JOUR LE PROJET" : "PUBLIER LE PROJET PÉDAGOGIQUE"}
-                        </button>
-                        {isEditing && (
-                          <button type="button" onClick={() => {
-                            setIsEditing(false);
-                            setCurrentSaeId(null);
-                            setSaeForm({ titre: '', ressource: 'Développement Web', date: '', desc: '', promotion: '2026', semestre: 'S1' });
-                            setImageFile(null);
-                            setConsigneFile(null);
-                            setExistingConsigne(null);
-                          }} className="mmi-btn-cancel">
-                            ANNULER
-                          </button>
-                        )}
+                        <button type="submit" className="mmi-btn-black-pill">{isEditing ? "METTRE À JOUR LE PROJET" : "PUBLIER LE PROJET PÉDAGOGIQUE"}</button>
+                        {isEditing && <button type="button" onClick={() => {setIsEditing(false); setCurrentSaeId(null); setSaeForm({ titre: '', ressource: 'Développement Web', date: '', desc: '', promotion: '2026', semestre: 'S1' }); setImageFile(null); setConsigneFile(null); setExistingConsigne(null);}} className="mmi-btn-cancel">ANNULER</button>}
                       </div>
                     </form>
                   </div>
@@ -856,121 +762,46 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
                   <h2 className="cursive-font bordeaux-text page-heading">Evaluation des travaux d'étudiants</h2>
                   <div className="mmi-glass-card table-box">
                     <table className="mmi-grading-table">
-                      <thead>
-                        <tr>
-                          <th>ÉTUDIANT</th>
-                          <th>PROJET</th>
-                          <th>DÉPÔT</th>
-                          <th>NOTE / 20</th>
-                          <th>ACTIONS</th>
-                        </tr>
-                      </thead>
+                      <thead><tr><th>ÉTUDIANT</th><th>PROJET</th><th>DÉPÔT</th><th>NOTE / 20</th><th>ACTIONS</th></tr></thead>
                       <tbody>
                         {rendus.map(r => (
                           <tr key={r.id}>
-                            <td className="bold-text">
-                              <button className="student-link" onClick={() => viewStudentDetails(r.email)}>
-                                {r.email}
-                              </button>
-                            </td>
+                            <td className="bold-text"><button className="student-link" onClick={() => viewStudentDetails(r.email)}>{r.email}</button></td>
                             <td>{r.sae_titre}</td>
                             <td className="date-cell">{new Date(r.date_depot).toLocaleDateString()}</td>
-                            <td>
-                              <input 
-                                type="number" 
-                                step="0.5"
-                                min="0"
-                                max="20"
-                                defaultValue={r.note} 
-                                onBlur={(e) => handleUpdateNote(r.id, e.target.value)} 
-                                className="mmi-note-field" 
-                              />
-                            </td>
-                            <td>
-                              <button className="view-work-btn" onClick={() => viewStudentDetails(r.email)}>
-                                📂 Voir tous les travaux
-                              </button>
-                            </td>
+                            <td><input type="number" step="0.5" min="0" max="20" defaultValue={r.note} onBlur={(e) => handleUpdateNote(r.id, e.target.value)} className="mmi-note-field" /></td>
+                            <td><button className="view-work-btn" onClick={() => viewStudentDetails(r.email)}>📂 Voir tous les travaux</button></td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
 
-                  {/* MODAL ÉTUDIANT AVEC CARROUSEL */}
                   {showStudentModal && (
                     <div className="student-modal-overlay" onClick={() => setShowStudentModal(false)}>
                       <div className="student-modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                          <h3 className="cursive-font bordeaux-text">Travaux de {selectedStudent}</h3>
-                          <button className="close-modal" onClick={() => setShowStudentModal(false)}>✖</button>
-                        </div>
-                        
+                        <div className="modal-header"><h3 className="cursive-font bordeaux-text">Travaux de {selectedStudent}</h3><button className="close-modal" onClick={() => setShowStudentModal(false)}>✖</button></div>
                         <div className="student-stats">
-                          <div className="stat-item">
-                            <span className="stat-label">Total rendus:</span>
-                            <span className="stat-value">{studentRendus.length}</span>
-                          </div>
-                          <div className="stat-item">
-                            <span className="stat-label">Moyenne:</span>
-                            <span className="stat-value">
-                              {studentRendus.length > 0 
-                                ? (studentRendus.reduce((acc, r) => acc + (parseFloat(r.note) || 0), 0) / studentRendus.length).toFixed(1)
-                                : 'N/A'}
-                            </span>
-                          </div>
+                          <div className="stat-item"><span className="stat-label">Total rendus:</span><span className="stat-value">{studentRendus.length}</span></div>
+                          <div className="stat-item"><span className="stat-label">Moyenne:</span><span className="stat-value">{studentRendus.length > 0 ? (studentRendus.reduce((acc, r) => acc + (parseFloat(r.note) || 0), 0) / studentRendus.length).toFixed(1) : 'N/A'}</span></div>
                         </div>
-
                         <div className="carousel-wrapper">
                           <ul className="carousel-list">
-                            {studentRendus.map((rendu, index) => (
+                            {studentRendus.map((rendu) => (
                               <li key={rendu.id} className="carousel-item">
                                 <div className="work-card">
-                                  <div className="work-header">
-                                    <h4>{rendu.sae_titre}</h4>
-                                    <span className="work-status">Rendu le {new Date(rendu.date_depot).toLocaleDateString()}</span>
-                                  </div>
-                                  
+                                  <div className="work-header"><h4>{rendu.sae_titre}</h4><span className="work-status">Rendu le {new Date(rendu.date_depot).toLocaleDateString()}</span></div>
                                   <div className="work-content">
-                                    <div className="work-preview">
-                                      {rendu.fichier_url && (
-                                        <a href={`${API_URL}${rendu.fichier_url}`} target="_blank" rel="noopener noreferrer" className="preview-link">
-                                          📄 Voir le document déposé
-                                        </a>
-                                      )}
-                                    </div>
-                                    
-                                    <div className="work-comment">
-                                      <label>Commentaire de l'étudiant :</label>
-                                      <p>{rendu.commentaire || "Aucun commentaire"}</p>
-                                    </div>
-                                    
-                                    <div className="work-grading">
-                                      <label>Note attribuée :</label>
-                                      <input 
-                                        type="number" 
-                                        step="0.5"
-                                        min="0"
-                                        max="20"
-                                        defaultValue={rendu.note} 
-                                        onBlur={(e) => handleUpdateNote(rendu.id, e.target.value)} 
-                                        className="mmi-note-field-modal" 
-                                      />
-                                    </div>
+                                    <div className="work-preview">{rendu.fichier_rendu && <a href={`${API_URL}${rendu.fichier_rendu}`} target="_blank" rel="noopener noreferrer" className="preview-link">📄 Voir le document déposé</a>}</div>
+                                    <div className="work-comment"><label>Commentaire de l'étudiant :</label><p>{rendu.commentaire || "Aucun commentaire"}</p></div>
+                                    <div className="work-grading"><label>Note attribuée :</label><input type="number" step="0.5" min="0" max="20" defaultValue={rendu.note} onBlur={(e) => handleUpdateNote(rendu.id, e.target.value)} className="mmi-note-field-modal" /></div>
                                   </div>
                                 </div>
                               </li>
                             ))}
                           </ul>
-                          
-                          <button className="carousel-nav prev" onClick={() => {
-                            const list = document.querySelector('.carousel-list');
-                            if (list) list.scrollBy({ left: -340, behavior: 'smooth' });
-                          }}>‹</button>
-                          <button className="carousel-nav next" onClick={() => {
-                            const list = document.querySelector('.carousel-list');
-                            if (list) list.scrollBy({ left: 340, behavior: 'smooth' });
-                          }}>›</button>
+                          <button className="carousel-nav prev" onClick={() => {const list = document.querySelector('.carousel-list'); if (list) list.scrollBy({ left: -340, behavior: 'smooth' });}}>‹</button>
+                          <button className="carousel-nav next" onClick={() => {const list = document.querySelector('.carousel-list'); if (list) list.scrollBy({ left: 340, behavior: 'smooth' });}}>›</button>
                         </div>
                       </div>
                     </div>
@@ -984,71 +815,26 @@ export default function TeacherDashboard({ user, onLogout, API_URL }) {
                   <div className="profile-layout-grid">
                     <aside className="profile-sidebar-card">
                       <div className="mmi-avatar-xl">P</div>
-                      <div className="profile-meta-titles">
-                        <h2 className="cursive-font bordeaux-text">{profileInfo.nom}</h2>
-                        <p className="mmi-email-sub">{user?.email || "professeur@ecampus.fr"}</p>
-                        <div className="profile-badge-row">
-                          <span className="mmi-tag-pill">Pôle Enseignement</span>
-                          <span className="mmi-tag-pill active">Actif</span>
-                        </div>
-                      </div>
-                      <div className="profile-bio-box">
-                        <h4 className="cursive-font bordeaux-text">Biographie</h4>
-                        {isEditingProfile ? (
-                          <textarea className="mmi-pill-input area" value={profileInfo.bio} onChange={e => setProfileInfo({...profileInfo, bio: e.target.value})} />
-                        ) : (
-                          <p>{profileInfo.bio}</p>
-                        )}
-                      </div>
+                      <div className="profile-meta-titles"><h2 className="cursive-font bordeaux-text">{profileInfo.nom}</h2><p className="mmi-email-sub">{user?.email || "professeur@ecampus.fr"}</p><div className="profile-badge-row"><span className="mmi-tag-pill">Pôle Enseignement</span><span className="mmi-tag-pill active">Actif</span></div></div>
+                      <div className="profile-bio-box"><h4 className="cursive-font bordeaux-text">Biographie</h4>{isEditingProfile ? <textarea className="mmi-pill-input area" value={profileInfo.bio} onChange={e => setProfileInfo({...profileInfo, bio: e.target.value})} /> : <p>{profileInfo.bio}</p>}</div>
                       <div className="profile-cta-stack">
-                        {isEditingProfile ? (
-                          <button onClick={() => setIsEditingProfile(false)} className="btn-mmi-profile save">SAUVEGARDER</button>
-                        ) : (
-                          <button onClick={() => setIsEditingProfile(true)} className="btn-mmi-profile edit">MODIFIER PROFIL</button>
-                        )}
+                        {isEditingProfile ? <button onClick={() => setIsEditingProfile(false)} className="btn-mmi-profile save">SAUVEGARDER</button> : <button onClick={() => setIsEditingProfile(true)} className="btn-mmi-profile edit">MODIFIER PROFIL</button>}
                         <button onClick={onLogout} className="btn-mmi-profile logout">DÉCONNEXION</button>
                       </div>
                     </aside>
-
                     <section className="profile-main-settings">
                       <div className="mmi-glass-card setting-block">
                         <h3 className="cursive-font bordeaux-text">Sécurité du compte</h3>
                         <form className="mmi-security-form" onSubmit={handleSecurityUpdate}>
-                          <div className="mmi-form-group">
-                            <label>Ancien mot de passe</label>
-                            <input type="password" placeholder="••••••••" className="mmi-pill-input" value={pwdForm.old} onChange={e => setPwdForm({...pwdForm, old: e.target.value})} required />
-                          </div>
+                          <div className="mmi-form-group"><label>Ancien mot de passe</label><input type="password" placeholder="••••••••" className="mmi-pill-input" value={pwdForm.old} onChange={e => setPwdForm({...pwdForm, old: e.target.value})} required /></div>
                           <div className="mmi-form-row">
-                            <div className="mmi-form-group">
-                              <label>Nouveau mot de passe</label>
-                              <input type="password" className="mmi-pill-input" value={pwdForm.new} onChange={e => setPwdForm({...pwdForm, new: e.target.value})} required />
-                            </div>
-                            <div className="mmi-form-group">
-                              <label>Confirmer nouveau</label>
-                              <input type="password" className="mmi-pill-input" value={pwdForm.confirm} onChange={e => setPwdForm({...pwdForm, confirm: e.target.value})} required />
-                            </div>
+                            <div className="mmi-form-group"><label>Nouveau mot de passe</label><input type="password" className="mmi-pill-input" value={pwdForm.new} onChange={e => setPwdForm({...pwdForm, new: e.target.value})} required /></div>
+                            <div className="mmi-form-group"><label>Confirmer nouveau</label><input type="password" className="mmi-pill-input" value={pwdForm.confirm} onChange={e => setPwdForm({...pwdForm, confirm: e.target.value})} required /></div>
                           </div>
                           <button type="submit" className="mmi-btn-black-pill full-width">METTRE À JOUR LE MOT DE PASSE</button>
                         </form>
                       </div>
-
-                      <div className="mmi-glass-card setting-block">
-                        <h3 className="cursive-font bordeaux-text">Informations de contact pro.</h3>
-                        <div className="mmi-pro-details">
-                          <div className="pro-item">
-                            <label>Localisation</label>
-                            <p>{profileInfo.bureau}</p>
-                          </div>
-                          <div className="pro-item">
-                            <label>Téléphone</label>
-                            <p>{profileInfo.tel}</p>
-                          </div>
-                          <div className="pro-item">
-                            <label>Disponibilités</label>
-                            <p>{profileInfo.dispo}</p>
-                          </div>
-                        </div>
-                      </div>
+                      <div className="mmi-glass-card setting-block"><h3 className="cursive-font bordeaux-text">Informations de contact pro.</h3><div className="mmi-pro-details"><div className="pro-item"><label>Localisation</label><p>{profileInfo.bureau}</p></div><div className="pro-item"><label>Téléphone</label><p>{profileInfo.tel}</p></div><div className="pro-item"><label>Disponibilités</label><p>{profileInfo.dispo}</p></div></div></div>
                     </section>
                   </div>
                 </motion.div>
