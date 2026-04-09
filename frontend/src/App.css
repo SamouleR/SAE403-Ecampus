@@ -140,7 +140,7 @@ body, html {
 
 .maquette-icon {
   font-size: 1.5rem;
-  color: #333;
+  color: #a31d24; /* était #333 */
   width: 30px;
 }
 
